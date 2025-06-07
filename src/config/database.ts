@@ -6,3 +6,5 @@ const sequelize = new Sequelize(dotenv.DB_NAME,dotenv.DB_USER,dotenv.DB_PASSWORD
     dialect:"mysql"
 }
    )
+
+   export default sequelize
