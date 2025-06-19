@@ -1,10 +1,25 @@
-import { Sequelize } from "sequelize";
-import dotenv from "./dotenv";
 
-const sequelize = new Sequelize(dotenv.DB_NAME,dotenv.DB_USER,dotenv.DB_PASSWORD,{
-    host:dotenv.DB_HOST,
-    dialect:"mysql"
+
+import { Sequelize } from 'sequelize';
+import config from './config';
+
+const env = process.env.NODE_ENV || 'development';
+
+const dbConfig = config[env as keyof typeof config];
+
+if (!dbConfig) {
+  throw new Error(`Database config not found for environment: ${env}`);
 }
-   )
 
-   export default sequelize
+const sequelize = new Sequelize(
+  dbConfig.database,
+  dbConfig.username,
+  dbConfig.password,
+  {
+    host: dbConfig.host,
+    dialect: dbConfig.dialect,
+    logging: dbConfig.logging,
+  }
+);
+
+export default sequelize;
