@@ -3,12 +3,18 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import User from '../models/userModel';
 import Role from '../models/roleModel';
+import { roleAttribute } from '../interfaces/roleInterface';
 import { forgotPasswordSchema, registerUserSchema, resetPasswordSchema, verifyOtpSchema } from '../validations/userValidation';
 import { UserAttributes } from '../interfaces/userInterface';
 import { generateTokens } from '../utils/token';
 import { sendOTPEmail } from '../utils/mailer';
 
 // Register user
+
+type UserWithRole = UserAttributes & {
+  role?: roleAttribute;
+};
+
 export const registerUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const { firstName, lastName, telephone, email, password} = req.body;
@@ -50,13 +56,13 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
 // Login user (after passport authentication)
 export const loginUser = async (req: Request, res: Response): Promise<void> => {
   try {
-    const user = req.user as UserAttributes;
-    
+    const user = req.user as UserWithRole 
     if (!user) {
       res.status(401).json({ message: 'Authentication failed' });
       return;
     }
 
+    console.log(user)
     const tokens = generateTokens(user.id);
 
       await User.update(
@@ -74,8 +80,9 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
-        roleId: user.roleId
+        role: user.role?.role 
       },
+      
       tokens
     });
   } catch (error) {
