@@ -19,7 +19,10 @@ passport.use(
     { usernameField: 'email' },
     async (email, password, done) => {
       try {
-        const user = await User.findOne({ where: { email } });
+        const user = await User.findOne({
+          where: { email },
+          include: [{ model: Role, as: 'role' }],
+        });
         if (!user || !user.password) {
           return done(null, false, { message: 'Invalid credentials' });
         }
@@ -83,7 +86,9 @@ passport.serializeUser((user: any, done) => {
 
 passport.deserializeUser(async (id: string, done) => {
   try {
-    const user = await User.findByPk(id);
+    const user = await User.findByPk(id,{
+      include: [{ model: Role, as: 'role' }]
+    });
     done(null, user);
   } catch (err) {
     done(err);
