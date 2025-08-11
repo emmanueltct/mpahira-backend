@@ -4,6 +4,10 @@ import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto';
 import { URLSearchParams } from 'url';
 
+import { generateFlutterwaveSignature, isValidFlutterwaveWebhook } from '../utils/flutterwaveUtils';
+import { processPaymentEvent } from '../service/flutterwaveService';
+
+
 const CLIENT_ID = '00b9b23f-6fa9-4805-8f34-e0fe3e41b3eb';
 const CLIENT_SECRET = 'qjKW3OMRTeaeoLpr0PwhQV2wBmkyLQ3H';
 const ENCRYPTION_KEY ="Cw76osrF7rZWD1PdsXWaJVye24yavsJjzivkdwvwSwk=";
@@ -164,7 +168,7 @@ export const initiateMobileMoneyAuthRedirect = async (req: Request, res: Respons
     currency: "RWF",
     payment_options: "card,mobilemoney",
     payment_type: "mobilemoneyrwanda",
-    redirect_url: `https://google.com`,
+    redirect_url: `https://mpahira.vercel.app/payment-result`,
     customer: {
       email: "customer@example.com",
       phonenumber: phone,
@@ -201,3 +205,88 @@ export const initiateMobileMoneyAuthRedirect = async (req: Request, res: Respons
     res.status(500).json({ error: "Failed to initiate payment" });
   }
 };
+
+
+export async function verifyPayment(transactionId: string) {
+  const  accessToken = await getAccessToken()
+   const traceId = uuidv4();
+  const res = await axios.get(`https://api.flutterwave.cloud/developersandbox/charges/${transactionId}`, {
+     headers: {
+        'accept': 'application/json',
+        'content-type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`,
+        'X-Trace-Id':traceId,
+      }
+  });
+  res.data;
+  return
+}
+
+
+export const manualVerifyPayment = async (req: Request, res: Response) => {
+  try {
+    const { transaction_id } = req.params;
+    console.log(transaction_id )
+    const result = await verifyPayment(transaction_id);
+    res.json(result);
+  } catch (error: any) {
+    res.status(500).json({ error: error});
+  }
+};
+
+
+
+// flutterwaveController.ts00000000000000000000000000000000000000000000000000000000
+
+ 
+
+
+export async function generateflutterwaveWebhookHandler(req: any, res: Response) {
+  //const flutterwaveSignature = req.headers['flutterwave-signature'] as string | undefined;
+  console.log(req.body)
+ const payloadString = JSON.stringify(req.body);
+   const signature = generateFlutterwaveSignature('Mpahira7XSu9Tj7Kh+VhEkIWYnkYHLup9YMe/t0OyUTq0DsD+k=Testcc',req.rawBody );
+
+    res.status(200).send({signature });
+     return
+}
+
+
+
+
+export async function flutterwaveWebhookHandler(req: any, res: Response) {
+  const flutterwaveSignature = req.headers['flutterwave-signature'] as string | undefined;
+
+  if (!flutterwaveSignature) {
+    res.status(401).send('Missing signature header');
+     return
+  }
+
+  const secretHash ='Mpahira7XSu9Tj7Kh+VhEkIWYnkYHLup9YMe/t0OyUTq0DsD+k=Testcc';
+
+  console.log(req.rawBody)
+  
+
+if(!req.rawBody || typeof flutterwaveSignature !== 'string')  {
+  res.status(401).send('Missing or invalid signature');
+   return
+}
+
+if (!isValidFlutterwaveWebhook(req.rawBody, flutterwaveSignature, secretHash)) {
+     res.status(401).send('Invalid signature');
+     return
+  }
+
+  try {
+    await processPaymentEvent(req.body);
+  } catch (err) {
+    console.error('Error processing webhook event:', err);
+     res.status(500).send('Internal server error');
+     return
+  }
+
+  // Always respond 200 for valid webhook
+  res.sendStatus(200);
+}
+
+

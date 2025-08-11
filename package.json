@@ -10,7 +10,7 @@
     "migrate": "sequelize-cli db:migrate",
     "migrate:undo": "sequelize-cli db:migrate:undo",
     "migration:generate": "npx sequelize-cli migration:generate --migrations-path src/migrations",
-    "build": "tsc",
+    "build": "tsc & node dist/app.js",
     "lint": "eslint . --ext .ts"
   },
   "sequelize-cli": {

@@ -1,4 +1,6 @@
-import express, { Application } from 'express';
+import express, {Request, Application } from 'express';
+
+import { IncomingMessage, ServerResponse } from 'http';
 import passport from 'passport';
 import cors from 'cors';
 import rolesRoutes from './routes/roles/rolesRouter';
@@ -16,11 +18,17 @@ import sequelize from './config/database';
 import './config/passport';
 import favouriteMarketRoutes from './routes/favouriteMarketRoutes';
 import deliveryLocationRoutes from './routes/deliveryLocationRoutes';
-
+import bodyParser from 'body-parser';
+import crypto from 'crypto';
 
 
 
 const app: Application = express();
+app.use(bodyParser.json({
+  verify: (req, res, buf) => {
+    (req as any).rawBody = buf.toString();
+  }
+}));
 const PORT = process.env.PORT || 8000;
 
 // Middleware
@@ -28,16 +36,14 @@ const PORT = process.env.PORT || 8000;
 const allowedOrigins = ['http://localhost:3000', 'http://192.168.1.66:3000'];
 
 app.use(express.json());
+
+
+
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, origin);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true
-})); 
+  origin: "*"
+}));
+
+
 app.use(passport.initialize());
 
 
