@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { FavauriteMarket } from '../models/favauriteMarket';
+import { FavauriteMarket } from '../models/FavauriteMarket';
 
 export const createFavourite = async (req: Request, res: Response) => {
   try {
