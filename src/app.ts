@@ -21,14 +21,13 @@ import deliveryLocationRoutes from './routes/deliveryLocationRoutes';
 import bodyParser from 'body-parser';
 import crypto from 'crypto';
 
-
+const app: Application = express();
 const PORT = process.env.PORT || 8000;
 
 // ✅ CORS must be first middleware
 app.use(cors({
-  origin: "*",
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+  origin: ["http://localhost:3000", "https://mpahira.vercel.app"],
+  credentials: true,
 }));
 
 // ✅ Parse raw body for webhooks before bodyParser.json
