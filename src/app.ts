@@ -22,29 +22,32 @@ import bodyParser from 'body-parser';
 import crypto from 'crypto';
 
 
+const PORT = process.env.PORT || 8000;
 
-const app: Application = express();
+// ✅ CORS must be first middleware
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
+// ✅ Parse raw body for webhooks before bodyParser.json
 app.use(bodyParser.json({
   verify: (req, res, buf) => {
     (req as any).rawBody = buf.toString();
   }
 }));
-const PORT = process.env.PORT || 8000;
 
-// Middleware
-
-const allowedOrigins = ['http://localhost:3000', 'http://192.168.1.66:3000'];
-
+// ✅ Express built-in JSON parser
 app.use(express.json());
 
-
-
-app.use(cors({
-  origin: "*"
-}));
-
-
+// ✅ Passport after body parsing
 app.use(passport.initialize());
+
+// ✅ Example route
+app.get("/", (req, res) => {
+  res.json({ message: "API is working with CORS" });
+});
 
 
 // Routes
