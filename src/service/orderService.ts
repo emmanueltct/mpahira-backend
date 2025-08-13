@@ -92,6 +92,9 @@ const createOrderFromCart = async (userId: string, reference:string, status: "pe
     generalTotal:carts[0].generalTotal,
   });
   
+  const deleteCart= await Cart.findOne({ where: { userId } });
+    if (!deleteCart) throw new Error('Cart not found');
+    await deleteCart.destroy();
 
   return order;
 };
