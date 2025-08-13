@@ -3,12 +3,13 @@ import { DataTypes, Model, Optional } from 'sequelize';
 import sequelize from '../config/database';
 import User from './userModel';
 import { OrderAttributes, OrderItem } from '../interfaces/orderInterface';
+import { DeliveryLocation } from './DeliveryLocation';
 
 
 export class Order extends Model<OrderAttributes> implements OrderAttributes {
     public id!: string;
     public userId!: string;
-    public items!: OrderItem[];
+    public items!:string;
     public buyerId!:string;
     public agentId!:string;
     public driverId!:string;
@@ -20,7 +21,7 @@ export class Order extends Model<OrderAttributes> implements OrderAttributes {
     public agentCommission!:number;
     public generalTotal !:number;
     public paymentTransaction!:string;
-    public paymentStatus!:'Pending'|'Verification'|'Paid'|'Rejected';
+    public paymentStatus!:'pending' | "Success" | "Cancelled";
     public orderProcessingStatus!:'Pending'| 'Assigned to Agent'|'Shopping'|'Shipping'|'Delivered';
     public agentComment!:Text;
     public buyerComment!:Text;
@@ -102,7 +103,7 @@ Order.init(
     },
     
     paymentStatus: {
-      type: DataTypes.ENUM('Pending', 'Verification','Paid','Rejected'),
+      type: DataTypes.ENUM("pending", "Success" , "Cancelled"),
       allowNull: false,
       defaultValue:"Pending",
     },
@@ -149,3 +150,4 @@ Order.init(
 Order.belongsTo(User, { foreignKey: 'buyerId',as:'buyer'});
 Order.belongsTo(User, { foreignKey: 'agentId',as:'agent'});
 Order.belongsTo(User, { foreignKey: 'driverId',as:'messenger'});
+/* Order.belongsTo(DeliveryLocation, { foreignKey: ' deliverylocationId',as:'location'});*/

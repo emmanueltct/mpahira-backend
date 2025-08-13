@@ -131,19 +131,14 @@ export const googleCallback = async (req: Request, res: Response): Promise<void>
       { where: { id: user.id } }
     );
 
-    res.status(200).json({
-      message: 'Google login successful',
-      user: {
-        id: user.id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        roleId: user.roleId
-      },
-      tokens
-    });
+     res.redirect(`${process.env.FRONTEND_URL}/auth/google?accessToken=${tokens.accessToken}`);
+   
+    
   } catch (error) {
-    res.status(500).json({ message: 'Google authentication error', error });
+
+      res.redirect(`${process.env.FRONTEND_URL}/auth/login`);
+    
+    //res.status(500).json({ message: 'Google authentication error', error });
   }
 };
 

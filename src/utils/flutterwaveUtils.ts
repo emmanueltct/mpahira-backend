@@ -12,7 +12,7 @@ export function isValidFlutterwaveWebhook(rawBody: string, signature: string, se
     .createHmac('sha256', secretHash)
     .update(rawBody)
     .digest('base64');
-    console.log({hash,signature})
+    
   return hash === signature;
 }
 

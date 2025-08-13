@@ -21,13 +21,12 @@ export const calculateTransportCost = (
     cost: 3000,
   };
 
-  console.log("7777777777777777777777777777777")
   const startLat = parseFloat(marketLat);
   const startLng = parseFloat(marketLng);
   const endLat = parseFloat(clientLat);
   const endLng = parseFloat(clientLng);
  
-  console.log({"startLat":startLat,"startLng":startLng,"endLat":endLat,"endLng":endLng } )
+  // console.log({"startLat":startLat,"startLng":startLng,"endLat":endLat,"endLng":endLng } )
 
   if (!isValidCoordinate(startLat, startLng) || !isValidCoordinate(endLat, endLng)) {
     return delivery;

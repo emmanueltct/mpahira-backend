@@ -12,6 +12,7 @@ import User from '../models/userModel';
 import Shop from '../models/shopModel';
 import Market from '../models/marketModel';
 import { DeliveryLocation } from '../models/DeliveryLocation';
+import { isTypedArray } from 'util/types';
 
 
 
@@ -43,7 +44,7 @@ export const createCart = async (req: Request, res: Response) => {
       return 
     }
 
-    console.log("++++++++++++++++++++++++++++++++++++++++++++++++++++++",product)
+   
     const newItem = {
       productId: items.productId,
       quantity: items.quantity,
@@ -74,7 +75,7 @@ export const createCart = async (req: Request, res: Response) => {
       const newCart = await Cart.create({
         userId,
         deliverylocationId: lastDeliveryLocation?.id ||"",
-        items: [newItem],
+        items: JSON.stringify(newItem),
         totalAmount: newItem.totalPrice,
         serviceCost,
         transportCost: transportCost.cost,
@@ -87,7 +88,7 @@ export const createCart = async (req: Request, res: Response) => {
     }
 
     // Parse existing items if stored as JSON string
-    const existingItems = typeof cart.items === 'string' ? JSON.parse(cart.items) : cart.items;
+    const existingItems =  JSON.parse(cart.items)
 
     const alreadyExists = existingItems.some((item: any) => item.productId === newItem.productId);
     if (alreadyExists) {
@@ -101,7 +102,7 @@ export const createCart = async (req: Request, res: Response) => {
     const updatedGeneralTotal = updatedTotal + updatedServiceCost + cart.transportCost;
 
     await cart.update({
-      items: updatedItems,
+      items: JSON.stringify(updatedItems),
       totalAmount: updatedTotal,
       serviceCost: updatedServiceCost,
       generalTotal: updatedGeneralTotal,
@@ -140,8 +141,17 @@ export const updateCartItemQuantity = async (req: Request, res: Response) => {
          res.status(404).json({ message: 'Cart not found' });
          return
     } 
+    let items: any[] = [];
 
-      const items2 = typeof cart.items === 'string' ? JSON.parse(cart.items) : cart.items;
+        try {
+          const parsedItems = JSON.parse(cart.items);
+
+          items = Array.isArray(parsedItems) ? parsedItems : [parsedItems];
+        } catch (err) {
+          console.error(`Error parsing cart items for cart id ${cart.id}:`, err);
+          items = [];
+        }
+        const items2 =items;
     const updatedItems = items2.map((item: CartItem) =>(     
          item.productId === productId
         ? { ...item, quantity, totalPrice: quantity * item.unitPrice }
@@ -152,7 +162,7 @@ export const updateCartItemQuantity = async (req: Request, res: Response) => {
 
     const updatedServiceCost = cartUtils.calculateServiceCost(updatedTotal);
     const updatedGeneralTotal = updatedTotal + updatedServiceCost + cart.transportCost;
-    await cart.update({ items: updatedItems, totalAmount: updatedTotal,serviceCost: updatedServiceCost,generalTotal: updatedGeneralTotal });
+    await cart.update({ items:JSON.stringify(updatedItems), totalAmount: updatedTotal,serviceCost: updatedServiceCost,generalTotal: updatedGeneralTotal });
 
      res.status(200).json({ message: 'Item quantity updated', cart });
      return
@@ -177,14 +187,26 @@ export const removeCartItem = async (req: Request, res: Response) => {
         res.status(404).json({ message: 'Cart not found' });
         return
     }
-     const items2 = typeof cart?.items === 'string' ? JSON.parse(cart.items) : cart?.items;
+
+     let items: any[] = [];
+
+    try {
+      const parsedItems = JSON.parse(cart.items);
+
+      items = Array.isArray(parsedItems) ? parsedItems : [parsedItems];
+    } catch (err) {
+      console.error(`Error parsing cart items for cart id ${cart.id}:`, err);
+      items = [];
+    }
+     const items2 =items;
+
     const filteredItems = items2.filter((item: { productId: string; }) => item.productId !== productId);
     const updatedTotal = filteredItems.reduce((sum:number, i: { totalPrice: any; }) => sum + i.totalPrice, 0);
 
     const updatedServiceCost = cartUtils.calculateServiceCost(updatedTotal);
     const updatedGeneralTotal = updatedTotal + updatedServiceCost + cart.transportCost;
 
-    await cart.update({ items: filteredItems, totalAmount: updatedTotal ,serviceCost: updatedServiceCost,generalTotal: updatedGeneralTotal });
+    await cart.update({ items: JSON.stringify(filteredItems), totalAmount: updatedTotal ,serviceCost: updatedServiceCost,generalTotal: updatedGeneralTotal });
 
      res.status(200).json({ message: 'Item removed from cart', cart });
      return
@@ -214,13 +236,13 @@ export const deleteCart = async (req: Request, res: Response) => {
 
 export const viewCarts = async (req: Request, res: Response) => {
     const user = (req as any).user;
- 
+
   try {
     let carts;
-
+    
     if (user.role.role === 'Buyer') {
       carts = await Cart.findAll({ where: { userId:user.id } ,
-         include: [{ model: DeliveryLocation, as:"location" }]
+         include: [{ model: User, as:"buyer" },{ model: DeliveryLocation, as:"location" }]
         });
     } else if (['Admin', 'Seller', 'Agent'].includes(user.role.role)) {
       carts = await Cart.findAll({
@@ -231,39 +253,42 @@ export const viewCarts = async (req: Request, res: Response) => {
        res.status(403).json({ message: 'Access denied' });
        return
     }
-
-
     const enrichedCarts = await Promise.all(
       carts.map(async (cart) => {
-        const items = typeof cart.items === 'string' ? JSON.parse(cart.items) : cart.items;
+        let items: any[] = [];
+
+        try {
+          const parsedItems = JSON.parse(cart.items);
+
+          items = Array.isArray(parsedItems) ? parsedItems : [parsedItems];
+        } catch (err) {
+          console.error(`Error parsing cart items for cart id ${cart.id}:`, err);
+          items = [];
+        }
 
         const enrichedItems = await Promise.all(
           items.map(async (item: any) => {
-            const shopProduct: any = await ShopProduct.findOne({
-              where: {id: item.productId },
+            const shopProduct = await ShopProduct.findOne({
+              where: { id: item.productId },
               include: [
+                { model: Product, as: "productName" },
                 {
-                    model: Product, as: 'productName',
-                    // attributes: ['productName'],
+                  model: Shop,
+                  as: "shopName",
+                  include: [
+                    { model: User, as: "seller" },
+                    { model: Market, as: "market" },
+                  ],
                 },
-
-                {
-                    model: Shop,as: 'shopName',
-                    include: [
-                    { model: User, as: 'seller' },
-                    { model: Market, as: 'market'}
-                    ],
-                }
-                ]
+              ],
             });
-                // console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<",shopProduct)
+
             return {
               ...item,
-              ShopProduct:shopProduct || null,
-              productName: shopProduct?.productName || null,
-              shopName:shopProduct?.shopName|| null,
-              shopOwner: shopProduct?.shopName.seller|| null,
-              marketName: shopProduct?.shopName?.market || null,
+              ShopProduct: shopProduct ?? null,
+              shopName: shopProduct?.shopName ?? null,
+              shopOwner: shopProduct?.shopName?.seller ?? null,
+              marketName: shopProduct?.shopName?.market ?? null,
             };
           })
         );
@@ -274,6 +299,8 @@ export const viewCarts = async (req: Request, res: Response) => {
         };
       })
     );
+
+
 
     res.status(200).json({ carts: enrichedCarts });
     return;
