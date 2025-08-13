@@ -11,7 +11,7 @@ export interface CartAttributes {
   id?: string;
   userId: string;
   deliverylocationId?:string | undefined;
-  items: CartItem[];
+  items:string;
   totalAmount: number;
   transportCost : number;
   deliveryDistance:string,

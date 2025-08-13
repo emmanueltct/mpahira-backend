@@ -10,7 +10,7 @@ export class Cart extends Model<CartAttributes,CartCreationAttributes> implement
   public id!: string;
   public userId!: string;
   public deliverylocationId!:string | undefined;
-  public items!: CartItem[];
+  public items!: string;
   public totalAmount!: number;
   public  transportCost !: number;
   public  deliveryDistance!:string;

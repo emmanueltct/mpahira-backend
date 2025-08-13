@@ -3,6 +3,7 @@ import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto';
 import { URLSearchParams } from 'url';
+import orderService from '../service/orderService';
 
 import { generateFlutterwaveSignature, isValidFlutterwaveWebhook } from '../utils/flutterwaveUtils';
 import { processPaymentEvent } from '../service/flutterwaveService';
@@ -122,11 +123,11 @@ async function createPayment() {
        'X-Idempotency-Key': traceId
       }
     });
-    console.log('Customer created:', response.data);
+ 
     return response.data.data.id
   } catch (error:any) {
     if (error.response) {
-      console.log('API error for mobile money:', error.response.data.error);
+      // console.log('API error for mobile money:', error.response.data.error);
     } else {
       console.error('Error:', error.message);
     }
@@ -135,6 +136,7 @@ async function createPayment() {
 
 
 export const initiateMobileMoneyAuthRedirect = async (req: Request, res: Response) => {
+        const userId = (req as any).user.id;
   const { amount, phone } = req.body;
 
   if (!amount || !phone) {
@@ -145,7 +147,7 @@ export const initiateMobileMoneyAuthRedirect = async (req: Request, res: Respons
   let accessToken: string;
   try {
     accessToken = await getAccessToken(); // already working for you
-    console.log("Access Token:", accessToken);
+    // console.log("Access Token:", accessToken);
   } catch {
     res.status(500).json({ error: "Failed to get access token" });
     return;
@@ -156,11 +158,14 @@ export const initiateMobileMoneyAuthRedirect = async (req: Request, res: Respons
 
   //console.log("customer id", )
 
-  const traceId = uuidv4();
+    const reference = generateReference(); // unique payment reference
+    const traceId = uuidv4();
+    const idempotencyKey = uuidv4();
+    const BaseUrl=process.env.BASE_URL
 
   const payload = {
     
-    reference:  generateReference() , // Unique per transaction
+    reference, // Unique per transaction
      customer_id: "cus_T8Giu443Mz",
      //payment_method_id: "pm_mobilemoneyrwanda",      // Retrieved from customer creation API or DB
     payment_method_id:paymentId,  // Retrieved from payment methods list
@@ -168,7 +173,7 @@ export const initiateMobileMoneyAuthRedirect = async (req: Request, res: Respons
     currency: "RWF",
     payment_options: "card,mobilemoney",
     payment_type: "mobilemoneyrwanda",
-    redirect_url: `https://mpahira.vercel.app/payment-result`,
+    redirect_url: `https://mpahira.vercel.app/payments/orders`,
     customer: {
       email: "customer@example.com",
       phonenumber: phone,
@@ -191,20 +196,61 @@ export const initiateMobileMoneyAuthRedirect = async (req: Request, res: Respons
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
           "X-Trace-Id": traceId,
+          "X-Idempotency-Key": idempotencyKey,
           "X-Scenario-Key": "scenario:auth_redirect",
         },
       }
     );
 
-    res.json(response.data);
+      const data = response.data;
+      // console.log(data.data.reference,data.data.status,data.data.amount)
+
+      if (data?.data?.next_action.redirect_url) {
+
+        const order= await orderService.createOrderFromCart(userId, data.data.reference,data.data.status,data.data.amount)
+        res.json({
+          status: "success",
+          redirect_url:data?.data?.redirect_url,
+          order
+        });
+         return
+      } else {
+        res.status(400).json({
+          status: "failed",
+          message: "Could not create payment charge",
+          details: data,
+        });
+         return
+      }
   } catch (err: any) {
-    console.log(
-      "---------Payment initiation error:",
-      err.response?.data.error
-    );
-    res.status(500).json({ error: "Failed to initiate payment" });
+   
+    res.status(500).json({ message: "Failed to initiate payment" ,err});
   }
 };
+
+
+
+export const paymentCallback = async (req: Request, res: Response) => {
+  const { transaction_id, status } = req.query;
+
+  if (status !== "successful") {
+    res.redirect(`http://localhost:3000/checkout?status=failed`);
+     return
+  }
+
+  // Redirect to frontend to show success
+ res.redirect(
+    `http://localhost:3000/checkout/success?transaction_id=${transaction_id}`
+    
+  );
+    return
+};
+
+
+
+
+
+
 
 
 export async function verifyPayment(transactionId: string) {
@@ -226,7 +272,6 @@ export async function verifyPayment(transactionId: string) {
 export const manualVerifyPayment = async (req: Request, res: Response) => {
   try {
     const { transaction_id } = req.params;
-    console.log(transaction_id )
     const result = await verifyPayment(transaction_id);
     res.json(result);
   } catch (error: any) {
@@ -243,7 +288,7 @@ export const manualVerifyPayment = async (req: Request, res: Response) => {
 
 export async function generateflutterwaveWebhookHandler(req: any, res: Response) {
   //const flutterwaveSignature = req.headers['flutterwave-signature'] as string | undefined;
-  console.log(req.body)
+  
  const payloadString = JSON.stringify(req.body);
    const signature = generateFlutterwaveSignature('Mpahira7XSu9Tj7Kh+VhEkIWYnkYHLup9YMe/t0OyUTq0DsD+k=Testcc',req.rawBody );
 
@@ -264,7 +309,7 @@ export async function flutterwaveWebhookHandler(req: any, res: Response) {
 
   const secretHash ='Mpahira7XSu9Tj7Kh+VhEkIWYnkYHLup9YMe/t0OyUTq0DsD+k=Testcc';
 
-  console.log(req.rawBody)
+ 
   
 
 if(!req.rawBody || typeof flutterwaveSignature !== 'string')  {

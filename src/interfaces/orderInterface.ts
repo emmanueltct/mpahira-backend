@@ -14,7 +14,7 @@ export interface OrderItem {
 
 export interface OrderAttributes {
     id?: string;
-    items: OrderItem[];
+    items: string;
     buyerId:string;
     agentId?:string;
     driverId?:string;
@@ -26,7 +26,7 @@ export interface OrderAttributes {
     agentCommission:number;
     generalTotal:number;
     paymentTransaction?:string;
-    paymentStatus:'Pending'|'Verification'|'Paid'|'Rejected';
+    paymentStatus:"pending" | "Success" | "Cancelled";
     orderProcessingStatus:'Pending'| 'Assigned to Agent'|'Shopping'|'Shipping'|'Delivered';
     agentComment?:Text;
     buyerComment?:Text;

@@ -8,7 +8,7 @@ import { zodValidate } from '../middleware/isValidOrder';
 const orderRouter = Router();
 
 orderRouter.post('/', isAuthenticated, orderController.createOrderFromCart);
-orderRouter.get('/:userId',isAuthenticated, orderController.getClientOrders);
+orderRouter.get('/',isAuthenticated, orderController.getClientOrders);
 orderRouter.patch('/:orderId/payment-status',  isAuthenticated, isAdmin, zodValidate(paymentStatusSchema), orderController.updatePaymentStatus);
 orderRouter.patch('/:orderId/assign-agent', authenticateUser, isAdmin, zodValidate(assignAgentSchema), orderController.assignAgent);
 orderRouter.patch('/:orderId/assign-driver', authenticateUser, isAgent, zodValidate(assignDriverSchema), orderController.assignDriver);
