@@ -85,11 +85,11 @@ const generateReference = () => {
 //         'Authorization': `Bearer ${accessToken}`
 //       }
 //     });
-//     console.log('Customer created:', response.data);
+//     // console.log('Customer created:', response.data);
 //     return response.data.data.id
 //   } catch (error:any) {
 //     if (error.response) {
-//       console.log('API error:', error.response.data.error);
+//       // console.log('API error:', error.response.data.error);
 //     } else {
 //       console.error('Error:', error.message);
 //     }
@@ -127,7 +127,7 @@ async function createPayment() {
     return response.data.data.id
   } catch (error:any) {
     if (error.response) {
-      // console.log('API error for mobile money:', error.response.data.error);
+      // // console.log('API error for mobile money:', error.response.data.error);
     } else {
       console.error('Error:', error.message);
     }
@@ -147,7 +147,7 @@ export const initiateMobileMoneyAuthRedirect = async (req: Request, res: Respons
   let accessToken: string;
   try {
     accessToken = await getAccessToken(); // already working for you
-    // console.log("Access Token:", accessToken);
+    // // console.log("Access Token:", accessToken);
   } catch {
     res.status(500).json({ error: "Failed to get access token" });
     return;
@@ -156,7 +156,7 @@ export const initiateMobileMoneyAuthRedirect = async (req: Request, res: Respons
   //const customerId = await createCustomer();
   const paymentId=await  createPayment()
 
-  //console.log("customer id", )
+  //// console.log("customer id", )
 
     const reference = generateReference(); // unique payment reference
     const traceId = uuidv4();
@@ -203,7 +203,7 @@ export const initiateMobileMoneyAuthRedirect = async (req: Request, res: Respons
     );
 
       const data = response.data;
-      // console.log(data.data.reference,data.data.status,data.data.amount)
+  
 
       if (data?.data?.next_action.redirect_url) {
 

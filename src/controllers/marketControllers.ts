@@ -1,34 +1,50 @@
 import { Request, Response } from 'express';
 import Market from '../models/marketModel';
+import { uploadToCloudinary } from '../utils/uploadImage';
 
 export const createMarket = async (req: Request, res: Response) => {
   try {
+
+     const folderName="products/markets"
+        if (!req.file) {
+          res.status(400).json({ message: 'No file uploaded' });
+          return
+        }
+    
+  const result = await uploadToCloudinary(req.file.buffer, req.file.originalname,folderName);
+
+        
     const {
   marketName,
   province,
   district,
   sector,
-  marketThumbnail,
   classification,
   locationLongitude,
   locationLatitude,
   googleMapCoordinate
 } = req.body;
 
-// console.log("tttttttttttttttttttttttttttttttttttttttttttttt",req.body)
+if(result.secure_url){
+  
+
 const market = await Market.create({
   marketName,
   province,
   district,
   sector,
-  marketThumbnail,
+  marketThumbnail:result.secure_url,
   classification,
   locationLongitude,
   locationLatitude,
   googleMapCoordinate
 });
+  res.status(201).json(market);
+}else{
+ res.status(500).json({error: "something went wrong with uplodng image to the server and product not created please try again"}); 
+}
 
-    res.status(201).json(market);
+  
   } catch (error) {
     res.status(400).json({ message: 'Failed to create market', error });
   }

@@ -21,7 +21,16 @@ export default {
       onUpdate: 'CASCADE',
       onDelete: 'RESTRICT',
     },
-
+    productUnit: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: {
+        model: 'unitproducts',
+        key: 'id',
+      },
+      onUpdate: 'CASCADE',
+      onDelete: 'RESTRICT',
+    },
     productId: {
       type: DataTypes.UUID,
       allowNull: false,
@@ -32,11 +41,33 @@ export default {
       onUpdate: 'CASCADE',
       onDelete: 'RESTRICT',
     },
-
+     engLabel:{
+      type: DataTypes.STRING,
+      allowNull:false,
+      defaultValue:""
+    },
+     kinyLabel:{
+      type: DataTypes.STRING,
+      allowNull:false,
+      defaultValue:""
+    },
+     marketUnitPrice:{
+      type: DataTypes.STRING,
+      allowNull:false,
+    },
+    systemUnitPrice:{
+      type: DataTypes.STRING,
+      allowNull:false,
+    },
+     productDiscount:{
+      type: DataTypes.STRING,
+      allowNull:false,
+      defaultValue:0
+    },
     isExpires:{
       type: DataTypes.BOOLEAN,
       allowNull: false,
-      defaultValue:true
+      defaultValue:false
     },
 
     expireDate:{

@@ -28,12 +28,39 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
 };
 
 
+export const optionalAuth = async(req: Request, res: Response, next: NextFunction) => {
+ 
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader){
+    next();
+     return
+  } 
+
+  const token = authHeader.split(' ')[1];
+  try {
+    const decoded:any= jwt.verify(token, process.env.ACCESS_SECRET!);
+    const loggedUser=await User.findByPk(decoded.id, {
+      include: [{ model: Role, as: 'role' }]
+    });
+
+    req.user = loggedUser as UserAttributes;
+    next();
+    return
+  } catch {
+      res.status(403).json({ message: "Forbidden" });
+      return
+  }
+
+
+};
+
 export const isAdmin = (req: Request, res: Response, next: NextFunction) => {
   const user = (req as any).user;
 
-    console.log("+++++++++++++++++++++++++++++++++++++++++++++++++++++++",user.role.role)
+  
      if (user.role.role == 'Admin') {
-      // console.log("--------------------------------",user)
+      
      next();
       return
     }
@@ -45,9 +72,9 @@ export const isAdmin = (req: Request, res: Response, next: NextFunction) => {
 export const isSeller = (req: Request, res: Response, next: NextFunction) => {
   const user = (req as any).user;
 
-    console.log("+++++++++++++++++++++++++++++++++++++++++++++++++++++++",user.role.role)
+  
      if (user.role.role == 'Seller') {
-      // console.log("--------------------------------",user)
+      
      next();
       return
     }
@@ -59,9 +86,8 @@ export const isSeller = (req: Request, res: Response, next: NextFunction) => {
 export const isBuyer = (req: Request, res: Response, next: NextFunction) => {
   const user = (req as any).user;
 
-    console.log("+++++++++++++++++++++++++++++++++++++++++++++++++++++++",user.role.role)
      if (user.role.role == 'Buyer') {
-      // console.log("--------------------------------",user)
+     
      next();
       return
     }

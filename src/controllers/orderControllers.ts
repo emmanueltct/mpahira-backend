@@ -24,6 +24,22 @@ export const getClientOrders = async (req: Request, res: Response) => {
   }
 };
 
+export const getSingleClientOrders=async (req: Request, res: Response) => {
+
+    try {
+      const user = (req as any).user;
+      const orderId=req.params.id
+      
+    const orders = await orderService.getSingleClientOrders(user.id,user.role.role,orderId);
+
+    res.json(orders);
+  } catch (err:any) {
+     
+    res.status(400).json({ message:err.message});
+  }
+}
+
+
 export const updatePaymentStatus = async (req: Request, res: Response) => {
   try {
     const order = await orderService.updatePaymentStatus(req.params.orderId, req.body.paymentStatus);

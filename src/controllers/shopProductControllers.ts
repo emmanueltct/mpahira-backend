@@ -22,7 +22,8 @@ export const createShopProduct = async (req: Request, res: Response) => {
     const result = await uploadToCloudinary(req.file.buffer, req.file.originalname,folderName);
     
     const {
-       shopId,productName, productId,isExpires,expireDate,isAvailable,productDescription
+       shopId,productUnit, productPrice,productName, productId,isExpires,expireDate,isAvailable,productDescription,
+     kinyLabel,productDiscount
     } = req.body;
 
 
@@ -46,6 +47,12 @@ if(result.secure_url){
 const shopProduct = await ShopProduct.create({
      shopId,
      productId:finalProductId,
+     productUnit,
+     engLabel:productName,
+     kinyLabel,
+     marketUnitPrice:productPrice,
+     productDiscount,
+     systemUnitPrice:productPrice+(productPrice*10/100),
      isExpires,
      expireDate,
      isAvailable,
@@ -55,7 +62,7 @@ const shopProduct = await ShopProduct.create({
     
     res.status(201).json(shopProduct);
   }else{
-        res.status(201).json({error: "something went wrong and product not created please try again"});
+        res.status(500).json({error: "something went wrong with uplodng image to the server and product not created please try again"});
   }
 
   } catch (error) {
@@ -90,97 +97,122 @@ const shopProduct = await ShopProduct.create({
 
 
 
+
 export const getShopProducts = async (req: Request, res: Response) => {
   try {
     const {
-      searchTerm = '',
-      category = '',
-      market = '',
-      priceMin = 0,
-      priceMax = 0,
-      page = '1',
-      limit = '10',
-    } = req.query as {
-      searchTerm: string;
-      category: string;
-      market: string;
-      priceMin: string;
-      priceMax: string;
-      page: string ;
-      limit: string ;
-    };;
+      searchTerm = "",
+      category = "all",
+      market = "all",
+      priceMin = "0",
+      priceMax = "0",
+      page = "1",
+      limit = "10",
+      availability = "all",
+      expires = "all",
+    } = req.query as any;
 
-    const offset = (parseInt(page) - 1) * parseInt(limit);
-    const priceMinValue = Number(priceMin);
-    const priceMaxValue = Number(priceMax);
-
-    // Check for logged in user and their role
-    const user = req.user as { id: number; role: string } | undefined;
-
-    // Build where conditions
-    const productConditions: any = {};
-    const shopConditions: any = {};
+    const pageNum = parseInt(page) || 1;
+    const limitNum = parseInt(limit) || 10;
+    const offset = (pageNum - 1) * limitNum;
 
     const whereConditions: any = {};
-     if (user && user.role === 'Seller') {
-      whereConditions['$shopName.seller.id$'] = user.id;
+
+    // Handle logged in user
+    const user = req.user as { id: number; role: { role: string } } | undefined;
+    if (user && user.role.role === "Seller") {
+      whereConditions["$shopName.sellerId$"] = user.id;
     }
-    
-  if (searchTerm) {
-      whereConditions['$productName.product$'] = {
+
+    // Search
+    if (searchTerm.trim()) {
+      whereConditions["$productName.product$"] = {
         [Op.like]: `%${searchTerm}%`,
       };
     }
 
-    if (category) {
-      whereConditions['$productName.id$'] = category;
+    // Category filter
+    if (category !== "all") {
+      whereConditions["$productName.id$"] = category;
     }
 
-    if (market) {
-      whereConditions['$shopName.market.id$'] = market;
+    // Market filter
+    if (market !== "all") {
+      whereConditions["$shopName.market.id$"] = market;
     }
 
-    if (Number(priceMin) > 0 || Number(priceMax) > 0) {
-      whereConditions.price = {
-        ...(Number(priceMin) > 0 ? { [Op.gte]: Number(priceMin) } : {}),
-        ...(Number(priceMax) > 0 ? { [Op.lte]: Number(priceMax) } : {}),
+    // Availability filter
+    if (availability !== "all") {
+      whereConditions.isAvailable = availability === "true";
+    }
+
+    // Expires filter
+    if (expires !== "all") {
+      whereConditions.isExpires = expires === "true";
+    }
+
+    // Price range
+    const min = Number(priceMin);
+    const max = Number(priceMax);
+    if (min > 0 || max > 0) {
+      whereConditions.systemUnitPrice = {
+        ...(min > 0 ? { [Op.gte]: min } : {}),
+        ...(max > 0 ? { [Op.lte]: max } : {}),
       };
     }
+
+    // Query
     const shopProducts = await ShopProduct.findAndCountAll({
-        where: whereConditions,
+      where: whereConditions,
       include: [
         {
           model: Product,
-          as: 'productName',
-          // where: productConditions,
-          
+          as: "productName",
         },
         {
           model: Shop,
-          as: 'shopName',
-          // where: shopConditions,
+          as: "shopName",
           include: [
-            { model: User, as: 'seller', attributes: ["id","firstName","lastName","telephone","email","profilePic"] },
-            { model: Market, as: 'market', attributes: ["id","marketName", "province","district","sector","marketThumbnail","classification","locationLongitude","locationLatitude","googleMapCoordinate"] },
+            {
+              model: User,
+              as: "seller",
+              attributes: ["id", "firstName", "lastName", "telephone", "email", "profilePic"],
+            },
+            {
+              model: Market,
+              as: "market",
+              attributes: [
+                "id",
+                "marketName",
+                "province",
+                "district",
+                "sector",
+                "marketThumbnail",
+                "classification",
+                "locationLongitude",
+                "locationLatitude",
+                "googleMapCoordinate",
+              ],
+            },
           ],
         },
       ],
-      limit: Number(limit),
+      limit: limitNum,
       offset,
-      order: [['createdAt', 'DESC']],
+      order: [["createdAt", "DESC"]],
     });
 
     res.status(200).json({
       total: shopProducts.count,
-      page: parseInt(page),
-      totalPages: Math.ceil(shopProducts.count / parseInt(limit)),
+      page: pageNum,
+      totalPages: Math.ceil(shopProducts.count / limitNum),
       data: shopProducts.rows,
     });
-  } catch (error) {
-    console.error('Error fetching shop products:', error);
-    res.status(500).json({
-      message: 'Failed to fetch shop products',
-      error: (error as any).message || error,
+  } catch (error: any) {
+    console.error("Error fetching shop products:", error);
+     res.status(500).json({
+      message: "Failed to fetch shop products",
+      error: error.message || error,
     });
   }
 };

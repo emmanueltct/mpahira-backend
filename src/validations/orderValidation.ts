@@ -19,7 +19,7 @@ export const orderStatusSchema = z.object({
 
 export const orderItemUpdateSchema = z.object({
   generalStatus: z.enum(['Available', 'Not available']).optional(),
-  processingStatus: z.enum(['pending', 'Picked', 'Cancelled']).optional(),
+  processingStatus: z.enum(["Pending","Started","Picked","Cancelled"]).optional(),
   agentComment: z.string().optional(),
   buyerComment: z.string().optional()
 });

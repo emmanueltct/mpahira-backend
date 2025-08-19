@@ -3,10 +3,11 @@ import { unitProductAttribute } from '../interfaces/unitProductInterface';
 import UnitProduct from '../models/unitProductModel';
 
 // Create a new Unit product
-export const createProductUnit = async (req: Request<{}, {}, Pick<unitProductAttribute, 'unitProduct'>>, res: Response): Promise<void> => {
+export const createProductUnit = async (req: Request<{}, {}, Pick<unitProductAttribute, 'unitProduct'|'unitProductDescription'>>, res: Response): Promise<void> => {
   try {
-    const { unitProduct } = req.body;
-    const newUnitProduct = await UnitProduct.create({ unitProduct });
+    const { unitProduct,unitProductDescription } = req.body;
+    console.log("_______________________",unitProductDescription)
+    const newUnitProduct = await UnitProduct.create({ unitProduct,unitProductDescription });
     res.status(201).json(newUnitProduct);
   } catch (error) {
     res.status(500).json({ message: 'Error creating unit product', error });

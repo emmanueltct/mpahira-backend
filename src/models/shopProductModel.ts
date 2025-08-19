@@ -14,6 +14,12 @@ class ShopProduct extends Model<ShopProductAttributes, ShopProductCreationAttrib
   public id!: string;
   public shopId!: string;
   public productId!: string;
+  public marketUnitPrice!:string;
+  public systemUnitPrice!:string;
+  public productUnit!:string;
+  public engLabel!:string;
+  public kinyLabel!:string;
+  public productDiscount!:string;
   public isExpires!:boolean;
   public expireDate!: string;
   public isAvailable!:boolean;
@@ -42,6 +48,18 @@ ShopProduct.init(
       onDelete: 'RESTRICT',
     },
 
+    productUnit: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: {
+        model: 'unitproducts',
+        key: 'id',
+      },
+      onUpdate: 'CASCADE',
+      onDelete: 'RESTRICT',
+    },
+
+
     productId: {
       type: DataTypes.UUID,
       allowNull: false,
@@ -52,10 +70,35 @@ ShopProduct.init(
       onUpdate: 'CASCADE',
       onDelete: 'RESTRICT',
     },
+     engLabel:{
+      type: DataTypes.STRING,
+      allowNull:false,
+      defaultValue:""
+    },
+     kinyLabel:{
+      type: DataTypes.STRING,
+      allowNull:false,
+      defaultValue:""
+    },
+     marketUnitPrice:{
+      type: DataTypes.STRING,
+      allowNull:false,
+      defaultValue:0
+    },
+    systemUnitPrice:{
+      type: DataTypes.STRING,
+      allowNull:false,
+      defaultValue:0
+    },
+     productDiscount:{
+      type: DataTypes.STRING,
+      allowNull:false,
+      defaultValue:0
+    },
     isExpires:{
       type: DataTypes.BOOLEAN,
       allowNull: false,
-      defaultValue:true
+      defaultValue:false
     },
     expireDate:{
       type: DataTypes.STRING,

@@ -8,5 +8,15 @@ module.exports = {
     dialectOptions: {
       connectTimeout: 60000 // optional, to prevent timeout
     }
+  },
+  local: {
+    username: "root",
+    password: "",
+    database: "mpahira",
+    host: "127.0.0.1",
+    dialect: "mysql",
+    dialectOptions: {
+      connectTimeout: 60000 // optional, to prevent timeout
+    }
   }
 };

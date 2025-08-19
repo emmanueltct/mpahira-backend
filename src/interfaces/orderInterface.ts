@@ -6,7 +6,7 @@ export interface OrderItem {
   unitPrice: number;
   totalPrice: number;
   generalStatus:"Available"|"Not available";
-  processingStatus:"pending"|"Picked"|"Cancelled";
+  processingStatus:"Pending"|"Started"|"Picked"|"Cancelled";
   agentComment?:string;
   buyerComment?:string
 
