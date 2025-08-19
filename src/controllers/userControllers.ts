@@ -62,7 +62,7 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    console.log(user)
+ 
     const tokens = generateTokens(user.id);
 
       await User.update(
@@ -201,7 +201,7 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 min
-    console.log("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++",otpExpires)
+   
     await user.update({ otp, otpExpires });
     await sendOTPEmail(email, otp);
 
@@ -245,3 +245,43 @@ export const resetPassword = async (req: Request, res: Response) => {
     res.status(400).json({ msg: 'Invalid input', error: err });
   }
 };
+
+
+export const getAllUser=async (req: Request, res: Response): Promise<void> => {
+  try {
+    const user = req.user as UserAttributes;
+    
+    if (!user) {
+      res.status(401).json({ message: 'User not authenticated' });
+      return;
+    }
+    const userWithRole = await User.findAll( {
+      include: [{ model: Role, as: 'role' }]
+    });
+    res.status(200).json({ users: userWithRole });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching user profile', error });
+  }
+}
+
+
+
+export const assignRoleUser=async (req: Request, res: Response): Promise<void> => {
+  try {
+    const {userId}= req.params;
+    const {roleId}=req.body
+    
+
+    const userRole = await User.findOne( { where:{id:userId}
+    });
+      if (!userRole) {
+      res.status(401).json({ message: 'User not Found please try again' });
+      return;
+    }
+    await userRole?.update({roleId})
+    res.status(200).json({ user: userRole});
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching user profile', error });
+  }
+}
+

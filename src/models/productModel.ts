@@ -10,6 +10,7 @@ interface productCreationAttributes extends Optional<productAttribute, 'id'> {}
 class Product extends Model<productAttribute, productCreationAttributes> implements productAttribute {
   public id!: string;
   public product!: string;
+  public productKinyLabel!:string;
 }
 
 Product.init(
@@ -25,6 +26,10 @@ Product.init(
       allowNull: false,
       unique: true,
     },
+    productKinyLabel:{
+        type: DataTypes.STRING,
+        allowNull: false
+      }
   },
   {
     sequelize,

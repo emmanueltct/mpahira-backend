@@ -20,6 +20,7 @@ import favouriteMarketRoutes from './routes/favouriteMarketRoutes';
 import deliveryLocationRoutes from './routes/deliveryLocationRoutes';
 import bodyParser from 'body-parser';
 import crypto from 'crypto';
+import driverRoutes from './routes/driverRoutes';
 
 const app: Application = express();
 const PORT = process.env.PORT || 8000;
@@ -62,21 +63,22 @@ app.use('/api/orders',orderRouter)
 app.use('/api/favourite-markets', favouriteMarketRoutes);
 app.use('/api/delivery-locations', deliveryLocationRoutes);
 app.use("/api/payments", paymentRoutes);
+app.use("/api/drivers", driverRoutes);
 
 
 (async () => {
   try {
     await sequelize.authenticate();
-    console.log('Connection to the database successful!');
+    ;
   } catch (error) {
     console.error('Unable to connect to the database:', error);
   }
 })();
 // Sync DB and start server
 sequelize.sync({ force: false }).then(() => {
-  console.log('Database synced');
+
   app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+   console.log(`Server running on http://localhost:${PORT}`);
   });
 }).catch(err => {
   console.error('Database sync error:', err);

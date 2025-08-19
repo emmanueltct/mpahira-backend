@@ -14,6 +14,10 @@ export default {
         type: DataTypes.STRING,
         allowNull: false,
       },
+      unitProductDescription: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
       createdAt: {
         allowNull: false,
         type: DataTypes.DATE,

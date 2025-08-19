@@ -28,7 +28,7 @@ export const createDeliveryLocation = async (req: Request, res: Response) => {
       locationDescription,
     });
 
-    console.log("------------------------------------------------------------")
+  
        let cart = await Cart.findOne({ where: { userId:buyerId }})
      
       if(cart){
@@ -51,7 +51,6 @@ export const createDeliveryLocation = async (req: Request, res: Response) => {
                 locationLongitude
         
               );
-              console.log("---------------------------------------------------------------",transportCost)
               const updatedGeneralTotal = cart?.totalAmount + cart.serviceCost + transportCost.cost;
 
               await cart?.update({deliverylocationId:location.id, transportCost: transportCost.cost, deliveryDistance:transportCost.distance, generalTotal: updatedGeneralTotal,});

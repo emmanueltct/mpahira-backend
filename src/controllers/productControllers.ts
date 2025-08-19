@@ -3,10 +3,10 @@ import { productAttribute } from "../interfaces/productInterface";
 import Product from '../models/productModel';
 
 // Create a new product
-export const createProduct = async (req: Request<{}, {}, Pick<productAttribute, 'product'>>, res: Response): Promise<void> => {
+export const createProduct = async (req: Request<{}, {}, Pick<productAttribute, 'product'|'productKinyLabel'>>, res: Response): Promise<void> => {
   try {
-    const { product } = req.body;
-    const newproduct = await Product.create({ product });
+    const { product,productKinyLabel} = req.body;
+    const newproduct = await Product.create({ product,productKinyLabel });
     res.status(201).json(newproduct);
   } catch (error) {
     res.status(500).json({ message: 'Error creating product', error });
@@ -16,7 +16,9 @@ export const createProduct = async (req: Request<{}, {}, Pick<productAttribute, 
 // Get all products
 export const getAllProducts = async (_req: Request, res: Response): Promise<void> => {
   try {
-    const products: productAttribute[] = await Product.findAll();
+    const products: productAttribute[] = await Product.findAll({
+          order: [['createdAt', 'DESC']], // or any column you want to sort by
+        });
     res.status(200).json(products);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching products', error });

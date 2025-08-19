@@ -31,7 +31,7 @@ const createOrderFromCart = async (userId: string, reference:string, status: "pe
 
           items = Array.isArray(parsedItems) ? parsedItems : [parsedItems];
         } catch (err) {
-          console.log(`Error parsing cart items for cart id ${cart.id}:`, err);
+           console.log(`Error parsing cart items for cart id ${cart.id}:`, err);
           items = [];
         }
 
@@ -99,77 +99,177 @@ const createOrderFromCart = async (userId: string, reference:string, status: "pe
   return order;
 };
 
-const getClientOrders = async (userId: string, role:string) => {
+const getClientOrders = async (userId: string, role: string) => {
+  let orders;
 
+  if (role === "Buyer") {
+    // Buyer: only their own orders
+    orders = await Order.findAll({
+      where: { buyerId: userId },
+      include: [{ model: User, as: "buyer" }],
+    });
+  } else if (role === "Agent") {
+    // Agent: only orders assigned to them
+    orders = await Order.findAll({
+      where: { agentId: userId },
+      include: [{ model: User, as: "buyer" }],
+    });
+  } else if (role === "Admin" || role === "Seller") {
+    // Admin: all orders, Seller: still filter later
+    orders = await Order.findAll({
+      include: [{ model: User, as: "buyer" }],
+    });
+  } else {
+    throw new Error("Access Denied");
+  }
 
-    let orders;
-    if (role=== 'Buyer') {
-       orders = await Order.findAll({ where: {buyerId:userId } ,
-         include: [{ model: User, as:"buyer" },
-          // { model: DeliveryLocation, as:"location" }
-        ]
-        });
-      
-    } else if (['Admin', 'Seller', 'Agent'].includes(role)) {
-      orders= await Order.findAll({
-        include: [{ model: User, as:"buyer" },
-        //  { model: DeliveryLocation, as:"location" }
-        ],
-      });
-    } else {
-       throw new Error('Access Denied');
-       return 
-    }
+  const enrichedOrders = await Promise.all(
+    orders.map(async (order) => {
+      let items: any[] = [];
+      try {
+        const parsedItems = JSON.parse(order.items);
+        items = Array.isArray(parsedItems) ? parsedItems : [parsedItems];
+      } catch (err) {
+        console.error(`Error parsing cart items for order id ${order.id}:`, err);
+      }
 
-      const enrichedOrders = await Promise.all(
-      orders.map(async (cart) => {
-        let items: any[] = [];
+      // Enrich items
+      let enrichedItems = await Promise.all(
+        items.map(async (item: any) => {
+          const shopProduct = await ShopProduct.findOne({
+            where: { id: item.productId },
+            include: [
+              { model: Product, as: "productName" },
+              {
+                model: Shop,
+                as: "shopName",
+                include: [
+                  { model: User, as: "seller" },
+                  { model: Market, as: "market" },
+                ],
+              },
+            ],
+          });
 
-        try {
-          const parsedItems = JSON.parse(cart.items);
+          return {
+            ...item,
+            ShopProduct: shopProduct ?? null,
+            shopName: shopProduct?.shopName ?? null,
+            shopOwner: shopProduct?.shopName?.seller ?? null,
+            marketName: shopProduct?.shopName?.market ?? null,
+          };
+        })
+      );
 
-          items = Array.isArray(parsedItems) ? parsedItems : [parsedItems];
-        } catch (err) {
-          console.error(`Error parsing cart items for cart id ${cart.id}:`, err);
-          items = [];
-        }
-
-        const enrichedItems = await Promise.all(
-          items.map(async (item: any) => {
-            const shopProduct = await ShopProduct.findOne({
-              where: { id: item.productId },
-              include: [
-                { model: Product, as: "productName" },
-                {
-                  model: Shop,
-                  as: "shopName",
-                  include: [
-                    { model: User, as: "seller" },
-                    { model: Market, as: "market" },
-                  ],
-                },
-              ],
-            });
-
-            return {
-              ...item,
-              ShopProduct: shopProduct ?? null,
-              shopName: shopProduct?.shopName ?? null,
-              shopOwner: shopProduct?.shopName?.seller ?? null,
-              marketName: shopProduct?.shopName?.market ?? null,
-            };
-          })
+      // 🔑 Seller-specific filtering:
+      if (role === "Seller") {
+        enrichedItems = enrichedItems.filter(
+          (item) => item.shopOwner?.id === userId
         );
 
-        return {
-          ...cart.toJSON(),
-          items: enrichedItems,
-        };
-      })
-    );
+        // If no items left for this seller, skip this order
+        if (enrichedItems.length === 0) {
+          return null;
+        }
+      }
 
-  return enrichedOrders;
+      return {
+        ...order.toJSON(),
+        items: enrichedItems,
+      };
+    })
+  );
+
+  // Remove null orders (seller orders with no matching products)
+  return enrichedOrders.filter((o) => o !== null);
 };
+
+
+
+const getSingleClientOrders = async (
+  userId: string,
+  role: string,
+  orderId: string
+) => {
+ 
+
+  // Build base where clause based on role
+  let whereClause: any = { id: orderId };
+
+  if (role === "Buyer") {
+    whereClause.buyerId = userId;
+  } else if (role === "Agent") {
+    whereClause.agentId = userId;
+  } else if (role === "Seller") {
+    // seller will filter items later, order itself can be fetched
+  } else if (role === "Admin") {
+    // Admin sees all, no extra where needed
+  } else {
+    throw new Error("Access Denied");
+  }
+
+  // Fetch the order
+  const order = await Order.findOne({
+    where: whereClause,
+    include: [{ model: User, as: "buyer" }],
+  });
+
+  if (!order) throw new Error("Order not found, please try again");
+
+  // Parse items
+  let items: any[] = [];
+  try {
+    const parsedItems = JSON.parse(order.items);
+    items = Array.isArray(parsedItems) ? parsedItems : [parsedItems];
+  } catch (err) {
+    console.error(`Error parsing items for order ${order.id}:`, err);
+    items = [];
+  }
+
+  // Enrich items with ShopProduct, Product, Shop, Market
+  const enrichedItems = await Promise.all(
+    items.map(async (item: any) => {
+      const shopProduct = await ShopProduct.findOne({
+        where: { id: item.productId },
+        include: [
+          { model: Product, as: "productName" },
+          {
+            model: Shop,
+            as: "shopName",
+            where: role === "Seller" ? { sellerId: userId } : undefined, // Filter for seller
+            include: [
+              { model: User, as: "seller" },
+              { model: Market, as: "market" },
+            ],
+          },
+        ],
+      });
+
+      if (!shopProduct) return null;
+
+      return {
+        ...item,
+        ShopProduct: shopProduct,
+        shopName: shopProduct.shopName ?? null,
+        shopOwner: shopProduct.shopName?.seller ?? null,
+        marketName: shopProduct.shopName?.market ?? null,
+      };
+    })
+  );
+
+  // Remove null items (for sellers, items not belonging to them)
+  const filteredItems = enrichedItems.filter((item) => item !== null);
+
+  // For sellers, return null if no items
+  if (role === "Seller" && filteredItems.length === 0) return null;
+
+  return {
+    ...order.toJSON(),
+    items: filteredItems,
+  };
+};
+
+
 
 const updatePaymentStatus = async (orderId: string, status:"pending" | "Success" | "Cancelled") => {
   const order = await Order.findByPk(orderId);
@@ -192,6 +292,7 @@ const assignDriver = async (orderId: string, driverId: string) => {
   const order = await Order.findByPk(orderId);
   if (!order) throw new Error('Order not found');
   order.driverId = driverId;
+  order.orderProcessingStatus="Shipping",
   await order.save();
   return order;
 };
@@ -209,8 +310,17 @@ const updateOrderItemStatus = async (orderId: string, productId: string, updates
   if (!order) throw new Error('Order not found');
 
   
-   const items = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
-  const updatedItems: OrderItem[] = items.map((item: { productId: string; generalStatus: string; processingStatus: string; totalPrice: number; }) => {
+  // const items = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
+   let items: OrderItem[] = [];
+
+        try {
+          const parsedItems = JSON.parse(order.items);
+          items = Array.isArray(parsedItems) ? parsedItems : [parsedItems];
+        } catch (err) {
+          console.error(`Error parsing cart items for cart id ${order .id}:`, err);
+          items = [];
+        }
+  const updatedItems= items.map((item: { productId: string; generalStatus: string; processingStatus: string; totalPrice: number;}) => {
     if (item.productId === productId) {
          
       const updatedItem = { ...item, ...updates };
@@ -218,7 +328,7 @@ const updateOrderItemStatus = async (orderId: string, productId: string, updates
       const shouldRefund =
         updatedItem.generalStatus === 'Not available' ||
         updatedItem.processingStatus === 'Cancelled';
-
+   
       if (shouldRefund && item.generalStatus !== 'Not available' && item.processingStatus !== 'Cancelled') {
         order.totalAmount -= item.totalPrice;
         order.refundAmount += item.totalPrice;
@@ -246,6 +356,7 @@ const updateOrderItemStatus = async (orderId: string, productId: string, updates
 export default {
   createOrderFromCart,
   getClientOrders,
+  getSingleClientOrders,
   updatePaymentStatus,
   updateOrderItemStatus,
   assignAgent,

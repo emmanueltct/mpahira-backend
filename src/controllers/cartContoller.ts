@@ -88,8 +88,9 @@ export const createCart = async (req: Request, res: Response) => {
     }
 
     // Parse existing items if stored as JSON string
-    const existingItems =  JSON.parse(cart.items)
-
+    let existingItems: any[] = [];
+    const items2 =  JSON.parse(cart.items)
+     existingItems = Array.isArray(items2) ? items2 : [items2];
     const alreadyExists = existingItems.some((item: any) => item.productId === newItem.productId);
     if (alreadyExists) {
        res.status(400).json({ message: 'Product already exists in cart' });

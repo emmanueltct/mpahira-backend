@@ -26,7 +26,7 @@ export const calculateTransportCost = (
   const endLat = parseFloat(clientLat);
   const endLng = parseFloat(clientLng);
  
-  // console.log({"startLat":startLat,"startLng":startLng,"endLat":endLat,"endLng":endLng } )
+  // // console.log({"startLat":startLat,"startLng":startLng,"endLat":endLat,"endLng":endLng } )
 
   if (!isValidCoordinate(startLat, startLng) || !isValidCoordinate(endLat, endLng)) {
     return delivery;

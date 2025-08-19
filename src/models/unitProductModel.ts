@@ -10,6 +10,7 @@ interface unitProductCreationAttributes extends Optional<unitProductAttribute, '
 class UnitProduct extends Model<unitProductAttribute, unitProductCreationAttributes> implements unitProductAttribute {
   public id!: string;
   public unitProduct!: string;
+  public unitProductDescription!:string;
 }
 
 UnitProduct.init(
@@ -20,11 +21,17 @@ UnitProduct.init(
       primaryKey: true,
       allowNull: false,
     },
+   
     unitProduct: {
       type: DataTypes.STRING,
       allowNull: false,
       unique: true,
     },
+    unitProductDescription: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
+
   },
   {
     sequelize,

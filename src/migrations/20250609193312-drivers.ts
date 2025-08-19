@@ -1,37 +1,42 @@
-// src/migrations/20250609193312-create-user-products.ts
-import { QueryInterface, DataTypes } from 'sequelize';
+import { QueryInterface, DataTypes } from "sequelize";
 
-export default {
+export = {
   up: async (queryInterface: QueryInterface) => {
-    await queryInterface.createTable('products', {
+    await queryInterface.createTable("Drivers", {
       id: {
         type: DataTypes.UUID,
         defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
-        allowNull: false,
       },
-      product: {
+      firstName: {
         type: DataTypes.STRING,
         allowNull: false,
       },
-      productKinyLabel: {
+      lastName: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      telephone: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true,
+      },
+      plateNumber: {
         type: DataTypes.STRING,
         allowNull: false,
       },
       createdAt: {
-        allowNull: false,
         type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
+        allowNull: false,
       },
       updatedAt: {
-        allowNull: false,
         type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
+        allowNull: false,
       },
     });
   },
 
   down: async (queryInterface: QueryInterface) => {
-    await queryInterface.dropTable('products');
+    await queryInterface.dropTable("Drivers");
   },
 };

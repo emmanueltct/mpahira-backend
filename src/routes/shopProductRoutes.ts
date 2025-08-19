@@ -8,13 +8,13 @@ import {
   deleteShopProduct,
 } from "../controllers/shopProductControllers"
 
-import { isAdmin, isAuthenticated, isSeller } from '../middleware/isAuthenticated';
+import { isAdmin, isAuthenticated, isSeller, optionalAuth } from '../middleware/isAuthenticated';
 import { validateShopProductInput } from '../middleware/isshopproductvalid';
 
 const shopProductRouter = Router();
 
 shopProductRouter.post('/', upload.single('productProfile'), isAuthenticated, isSeller, validateShopProductInput, createShopProduct);
-shopProductRouter.get('/', getShopProducts);
+shopProductRouter.get('/',optionalAuth , getShopProducts);
 shopProductRouter.get('/:id', getShopProductById);
 shopProductRouter.patch('/:id', updateShopProduct);
 shopProductRouter.delete('/:id', deleteShopProduct);
