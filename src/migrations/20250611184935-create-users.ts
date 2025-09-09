@@ -87,7 +87,7 @@ export default {
 
     // Fetch an existing role (for example "admin")
     const [roles]: any = await queryInterface.sequelize.query(
-      `SELECT id FROM roles WHERE role = 'admin' LIMIT 1;`
+      `SELECT id FROM roles WHERE role = 'Admin' LIMIT 1;`
     );
 
     const roleId = roles.length ? roles[0].id : crypto.randomUUID();
@@ -97,7 +97,7 @@ export default {
       await queryInterface.bulkInsert("roles", [
         {
           id: roleId,
-          role: "admin",
+          role: "Admin",
           createdAt: new Date(),
           updatedAt: new Date(),
         },
@@ -109,7 +109,7 @@ export default {
 
     await queryInterface.bulkInsert("users", [
       {
-  
+        id: crypto.randomUUID(),
         firstName: "Super",
         lastName: "Admin",
         telephone: "250788000000",

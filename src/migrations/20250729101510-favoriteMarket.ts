@@ -4,7 +4,7 @@ import { QueryInterface, DataTypes } from 'sequelize';
 
 export default {
   up: async (queryInterface: QueryInterface) => {
-    await queryInterface.createTable('favauriteMarkets', {
+    await queryInterface.createTable('favaurite_markets', {
        id: {
           type: DataTypes.UUID,
           defaultValue: DataTypes.UUIDV4,
@@ -36,6 +36,6 @@ export default {
   },
 
   down: async (queryInterface: QueryInterface) => {
-    await queryInterface.dropTable('favauriteMarkets');
+    await queryInterface.dropTable('favaurite_markets');
   },
 };

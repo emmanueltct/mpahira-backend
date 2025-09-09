@@ -1,25 +1,24 @@
-
 import { Dialect } from 'sequelize';
- import dotenv from "dotenv";
+import dotenv from "dotenv";
 dotenv.config();
 
 interface DBConfig {
-  username: string;
-  password: string;
-  database: string;
-  host: string;
+  username?: string;
+  password?: string;
+  database?: string;
+  host?: string;
+  port?: number;
   dialect: Dialect;
   logging?: boolean;
-  port?:number
+  use_env_variable?: string; // <-- allows connection string
 }
 
 interface ConfigGroup {
   development: DBConfig;
   test?: DBConfig;
   production?: DBConfig;
+  neon?: DBConfig; // add neon
 }
-
-
 
 const config: ConfigGroup = {
   development: {
@@ -44,6 +43,11 @@ const config: ConfigGroup = {
     dialect: 'mysql',
     port: 3306,
   },
+  neon: {
+    use_env_variable: "NEON_DATABASE_URL", // full connection string
+    dialect: "postgres",
+    logging: false,
+  }
 };
 
 export default config;

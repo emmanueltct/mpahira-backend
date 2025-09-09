@@ -1,37 +1,53 @@
+import { Sequelize } from "sequelize";
+import config from "./config";
 
+const env = process.env.NODE_ENV || "development";
 
-import { Sequelize } from 'sequelize';
-import config from './config';
+let sequelize: Sequelize;
 
-const env = process.env.NODE_ENV || 'development';
+if (env === "neon") {
+  const connectionString = process.env.NEON_DATABASE_URL;
+  if (!connectionString) {
+    throw new Error("NEON_CONNECTION_STRING is not set in environment variables");
+  }
 
-const dbConfig = config[env as keyof typeof config];
+  sequelize = new Sequelize(connectionString, {
+    dialect: "postgres",
+    logging: false,
+    pool: {
+      max: 10,
+      min: 0,
+      acquire: 30000,
+      idle: 10000,
+    },
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false,
+      },
+    },
+  });
+} else {
+  const dbConfig = config[env as keyof typeof config];
 
+  if (!dbConfig) {
+    throw new Error(`Database config not found for environment: ${env}`);
+  }
 
-if (!dbConfig) {
-  throw new Error(`Database config not found for environment: ${env}`);
-}
-
-const sequelize = new Sequelize(
-  dbConfig.database,
-  dbConfig.username,
-  dbConfig.password,
-  {
+  sequelize = new Sequelize(dbConfig.database as string, dbConfig.username as string, dbConfig.password, {
     host: dbConfig.host,
     dialect: dbConfig.dialect,
     logging: dbConfig.logging,
-
     pool: {
-      max: 10,       // maximum number of connection in pool
-      min: 0,        // minimum number of connection in pool
-      acquire: 30000, // maximum time, in ms, that pool will try to get connection before throwing error
-      idle: 10000,    // maximum time, in ms, that a connection can be idle before being released
+      max: 10,
+      min: 0,
+      acquire: 30000,
+      idle: 10000,
     },
-
     dialectOptions: {
-      connectTimeout: 60000, // increase connection timeout to 60 seconds
+      connectTimeout: 60000,
     },
-  }
-);
+  });
+}
 
 export default sequelize;

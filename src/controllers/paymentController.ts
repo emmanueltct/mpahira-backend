@@ -223,6 +223,7 @@ export const initiateMobileMoneyAuthRedirect = async (req: Request, res: Respons
          return
       }
   } catch (err: any) {
+    console.log(err)
    
     res.status(500).json({ message: "Failed to initiate payment" ,err});
   }

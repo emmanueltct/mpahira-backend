@@ -6,6 +6,8 @@ import { ShopProductAttributes } from '../interfaces/shopProductInterface';
 
 import Product from './productModel';
 import Shop from './shopModel';
+import UnitProduct from './unitProductModel';
+import ProductPricing from './productPricing';
 
 
 type ShopProductCreationAttributes = Optional<ShopProductAttributes, 'id' | 'createdAt' | 'updatedAt'>;
@@ -52,7 +54,7 @@ ShopProduct.init(
       type: DataTypes.UUID,
       allowNull: false,
       references: {
-        model: 'unitproducts',
+        model: 'unit_products',
         key: 'id',
       },
       onUpdate: 'CASCADE',
@@ -128,14 +130,6 @@ ShopProduct.init(
   }
 );
 
-ShopProduct.belongsTo(Product, {
-  foreignKey: 'productId',
-  as: 'productName',
-});
 
-ShopProduct.belongsTo(Shop, {
-  foreignKey: 'shopId',
-  as: 'shopName',
-});
 
 export default ShopProduct;

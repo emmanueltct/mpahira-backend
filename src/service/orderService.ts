@@ -17,7 +17,7 @@ const createOrderFromCart = async (userId: string, reference:string, status: "pe
  
   if (!carts) throw new Error('Cart not found');
 
-  
+  console.log("0000000000000000000000000000000000000000000",status)
   let refundAmount = 0;
 
     let items: any[] = [];
@@ -85,7 +85,8 @@ const createOrderFromCart = async (userId: string, reference:string, status: "pe
     serviceCost:carts[0].serviceCost,
     agentCommission:Math.round(carts[0].serviceCost/5),
     paymentTransaction:reference,
-    paymentStatus:status ,
+     paymentStatus:status ,
+    // paymentStatus:'pending',
     orderProcessingStatus: 'Pending',
     deliverylocationId:carts[0].deliverylocationId,
     deliveryDistance:carts[0].deliveryDistance,

@@ -16,7 +16,7 @@ const shopProductRouter = Router();
 shopProductRouter.post('/', upload.single('productProfile'), isAuthenticated, isSeller, validateShopProductInput, createShopProduct);
 shopProductRouter.get('/',optionalAuth , getShopProducts);
 shopProductRouter.get('/:id', getShopProductById);
-shopProductRouter.patch('/:id', updateShopProduct);
+shopProductRouter.patch('/:id',upload.single('productProfile'), updateShopProduct);
 shopProductRouter.delete('/:id', deleteShopProduct);
 
 export default shopProductRouter;

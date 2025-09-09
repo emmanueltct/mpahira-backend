@@ -19,8 +19,7 @@ export default {
         allowNull: true,
       },
       items: {
-        type: DataTypes.TEXT('long'),    // use TEXT/LONGTEXT instead of JSON
-        allowNull: false,
+        type: DataTypes.TEXT,    // use TEXT/LONGTEXT instead of JSON
         get() {
           const raw = this.getDataValue('items');
           return raw ? JSON.parse(raw) : [];    // return parsed object/array

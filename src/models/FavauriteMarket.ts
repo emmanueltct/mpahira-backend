@@ -3,6 +3,7 @@ import { DataTypes, Model, Optional } from 'sequelize';
 import sequelize from '../config/database';
 import User from './userModel';
 import { FavauriteMarketAttributes} from '../interfaces/favauriteMarketInterface';
+import Market from './marketModel';
 
 
 export class FavauriteMarket extends Model<FavauriteMarketAttributes> implements FavauriteMarketAttributes {
@@ -38,3 +39,4 @@ FavauriteMarket.init(
 );
 
 FavauriteMarket.belongsTo(User, { foreignKey: 'buyerId',as:'buyer'});
+FavauriteMarket.belongsTo(Market, { foreignKey: 'marketId',as:'market'});

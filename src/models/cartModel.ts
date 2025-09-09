@@ -31,11 +31,11 @@ Cart.init(
     },
      deliverylocationId: {
       type: DataTypes.UUID,
-      allowNull: true,
+      allowNull:true,
     },
      items: {
-        type: DataTypes.TEXT('long'),    // use TEXT/LONGTEXT instead of JSON
-        allowNull: false,
+        type: DataTypes.TEXT,    // use TEXT/LONGTEXT instead of JSON
+      
       },
 
     totalAmount: {

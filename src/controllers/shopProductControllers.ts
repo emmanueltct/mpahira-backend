@@ -1,12 +1,16 @@
 import { Request, Response } from 'express';
 
-import ShopProduct from '../models/shopProductModel';
-import Product from '../models/productModel';
-import Market from '../models/marketModel';
-import User from '../models/userModel';
+// import ShopProduct from '../models/shopProductModel';
+// import Product from '../models/productModel';
+// import Market from '../models/marketModel';
+// import User from '../models/userModel';
 import Shop from '../models/shopModel';
 import { uploadToCloudinary } from '../utils/uploadImage';
 import { Op } from 'sequelize';
+import { Product, ProductPricing, ShopProduct, SubUnitProduct, UnitProduct } from '../models/associations';
+import User from '../models/userModel';
+import Market from '../models/marketModel';
+// import UnitProduct from '../models/unitProductModel';
 
 
 
@@ -97,7 +101,6 @@ const shopProduct = await ShopProduct.create({
 
 
 
-
 export const getShopProducts = async (req: Request, res: Response) => {
   try {
     const {
@@ -107,65 +110,137 @@ export const getShopProducts = async (req: Request, res: Response) => {
       priceMin = "0",
       priceMax = "0",
       page = "1",
-      limit = "10",
+      limit = "12",
       availability = "all",
       expires = "all",
     } = req.query as any;
 
     const pageNum = parseInt(page) || 1;
-    const limitNum = parseInt(limit) || 10;
+    const limitNum = parseInt(limit) || 12;
     const offset = (pageNum - 1) * limitNum;
 
-    const whereConditions: any = {};
-
-    // Handle logged in user
     const user = req.user as { id: number; role: { role: string } } | undefined;
-    if (user && user.role.role === "Seller") {
-      whereConditions["$shopName.sellerId$"] = user.id;
-    }
 
-    // Search
-    if (searchTerm.trim()) {
-      whereConditions["$productName.product$"] = {
-        [Op.like]: `%${searchTerm}%`,
-      };
-    }
+    // ShopProduct filters
+   const shopProductWhere: any = {
+  ...(availability !== "all" && availability !== "" && { isAvailable: availability === "true" }),
+  ...(expires !== "all" && expires !== "" && { isExpires: expires === "true" }),
+  ...(Number(priceMin) || Number(priceMax)
+    ? { marketUnitPrice: { [Op.between]: [Number(priceMin) || 0, Number(priceMax) || Number.MAX_SAFE_INTEGER] } }
+    : {}),
+  // ShopProduct search columns
+  ...(searchTerm.trim() && {
+    [Op.or]: [
+      { engLabel: { [Op.iLike]: `%${searchTerm}%` } },
+      { kinyLabel: { [Op.iLike]: `%${searchTerm}%` } },
+    ],
+  }),
+};
 
-    // Category filter
-    if (category !== "all") {
-      whereConditions["$productName.id$"] = category;
-    }
+    // Multi-field search for ShopProduct & Product
+    const productWhere: any = {};
+      if (category !== "all" && category !== "") {
+        productWhere.id = category;
+      }
+      if (searchTerm.trim()) {
+        productWhere[Op.or] = [
+          { product: { [Op.iLike]: `%${searchTerm}%` } },
+          { productKinyLabel: { [Op.iLike]: `%${searchTerm}%` } },
+        ];
+      }
 
-    // Market filter
-    if (market !== "all") {
-      whereConditions["$shopName.market.id$"] = market;
-    }
+    // Market filter inside Shop include
+    const marketWhere = market !== "all" && market !== "" ? { id: market } : undefined;
 
-    // Availability filter
-    if (availability !== "all") {
-      whereConditions.isAvailable = availability === "true";
-    }
-
-    // Expires filter
-    if (expires !== "all") {
-      whereConditions.isExpires = expires === "true";
-    }
-
-    // Price range
-    const min = Number(priceMin);
-    const max = Number(priceMax);
-    if (min > 0 || max > 0) {
-      whereConditions.systemUnitPrice = {
-        ...(min > 0 ? { [Op.gte]: min } : {}),
-        ...(max > 0 ? { [Op.lte]: max } : {}),
-      };
-    }
-
-    // Query
     const shopProducts = await ShopProduct.findAndCountAll({
-      where: whereConditions,
+      where: shopProductWhere,
       include: [
         {
+          model: Product,
+          as: "productName",
+          where: Object.keys(productWhere).length ? productWhere : undefined,
+          attributes: ["id", "product", "productKinyLabel"],
+        },
+        {
+          model: Shop,
+          as: "shopName",
+          where: user && user.role.role === "Seller" ? { sellerId: user.id } : undefined,
+          include: [
+            {
+              model: User,
+              as: "seller",
+              attributes: ["id","firstName","lastName","telephone","email","profilePic"],
+            },
+            {
+              model: Market,
+              as: "market",
+              where: marketWhere,
+              attributes: [
+                "id","marketName","province","district","sector",
+                "marketThumbnail","classification",
+                "locationLongitude","locationLatitude","googleMapCoordinate",
+              ],
+            },
+          ],
+        },
+        {
+          model: ProductPricing,
+          as: "productUnities",
+          include: [
+            { model: UnitProduct, as: "unit" },
+            { model: SubUnitProduct, as: "subUnit" },
+          ],
+        },
+      ],
+      limit: limitNum,
+      offset,
+      order: [["createdAt", "DESC"]],
+    });
+
+    res.status(200).json({
+      total: shopProducts.count,
+      page: pageNum,
+      totalPages: Math.ceil(shopProducts.count / limitNum),
+      data: shopProducts.rows,
+    });
+  } catch (error: any) {
+    console.error("Error fetching shop products:", error);
+    res.status(500).json({
+      message: "Failed to fetch shop products",
+      error: error.message || error,
+    });
+  }
+};
+
+
+
+
+
+
+
+export const getShopProductById = async (req: Request, res: Response):Promise<void> => {
+  try {
+    const shopProduct = await ShopProduct.findByPk(req.params.id,{include:[
+      
+       {
+          model:ProductPricing,
+          as: "productUnities",
+          include:[
+            {
+              model:UnitProduct,
+              as: "unit",
+            },
+             {
+              model:SubUnitProduct,
+              as: "subUnit",
+            },
+
+          ],
+           // 👈 make sure alias matches associationinclude
+        },
+      
+      
+       {
           model: Product,
           as: "productName",
         },
@@ -196,36 +271,7 @@ export const getShopProducts = async (req: Request, res: Response) => {
             },
           ],
         },
-      ],
-      limit: limitNum,
-      offset,
-      order: [["createdAt", "DESC"]],
-    });
-
-    res.status(200).json({
-      total: shopProducts.count,
-      page: pageNum,
-      totalPages: Math.ceil(shopProducts.count / limitNum),
-      data: shopProducts.rows,
-    });
-  } catch (error: any) {
-    console.error("Error fetching shop products:", error);
-     res.status(500).json({
-      message: "Failed to fetch shop products",
-      error: error.message || error,
-    });
-  }
-};
-
-
-
-
-
-
-
-export const getShopProductById = async (req: Request, res: Response):Promise<void> => {
-  try {
-    const shopProduct = await ShopProduct.findByPk(req.params.id);
+    ]});
     if (!shopProduct){
         res.status(404).json({ message: 'ShopProduct not found' });
         return
@@ -239,15 +285,41 @@ export const getShopProductById = async (req: Request, res: Response):Promise<vo
 
 export const updateShopProduct = async (req: Request, res: Response) => {
   try {
-    const shopProduct= await ShopProduct.findByPk(req.params.id);
-     if (!shopProduct){
-        res.status(404).json({ message: 'ShopProduct not found' });
-        return
-    } 
-    await shopProduct.update(req.body);
+    const shopProduct = await ShopProduct.findByPk(req.params.id);
+
+    if (!shopProduct) {
+     res.status(404).json({ message: "ShopProduct not found" });
+      return 
+    }
+
+    console.log(req.body)
+    
+    const folderName = "products/profile";
+    const updateData: any = { ...req.body };
+
+    console.log(updateData)
+
+    // ✅ Only update productProfile if a file is uploaded
+    if (req.file) {
+      const result = await uploadToCloudinary(
+        req.file.buffer, req.file.originalname,folderName
+      );
+      updateData.productProfile = result.secure_url;
+    } else {
+      // Explicitly remove it to avoid overwriting with undefined
+      delete updateData.productProfile;
+    }
+
+    await shopProduct.update(updateData);
+
+    console.log("Updated data:", updateData);
+
     res.status(200).json(shopProduct);
   } catch (error) {
-    res.status(400).json({ message: 'Failed to update ShopProduct', error });
+    console.error("Update error:", error);
+    res
+      .status(400)
+      .json({ message: "Failed to update ShopProduct", error: (error as Error).message });
   }
 };
 

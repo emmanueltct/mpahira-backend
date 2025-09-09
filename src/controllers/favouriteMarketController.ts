@@ -1,25 +1,82 @@
 import { Request, Response } from 'express';
 import { FavauriteMarket } from '../models/FavauriteMarket';
+import { where } from 'sequelize';
+import Market from '../models/marketModel';
+import User from '../models/userModel';
 
 export const createFavourite = async (req: Request, res: Response) => {
   try {
-      const buyerId = (req as any).user.id;
-      const marketId=req.body.marketId
-    const favourite = await  FavauriteMarket.create({buyerId,marketId});
-    res.status(201).json(favourite);
+    const buyerId = (req as any).user.id;
+    const { marketId } = req.body;
+
+    // Check if favourite exists
+    const existingFavourite = await FavauriteMarket.findOne({ where: { buyerId } });
+
+    let favourite;
+    if (existingFavourite) {
+      // ✅ Update existing
+      existingFavourite.marketId = marketId;
+      await existingFavourite.save();
+      favourite = existingFavourite;
+    } else {
+      // ✅ Create new
+      favourite = await FavauriteMarket.create({ buyerId, marketId });
+    }
+
+     res.status(200).json(favourite);
+     return
   } catch (error) {
-    res.status(500).json({ message: 'Error creating favourite market', error });
+    console.error("Error saving favourite market:", error);
+    res
+      .status(500)
+      .json({ message: "Error saving favourite market", error });
+     return
   }
 };
 
 export const getAllFavourites = async (_: Request, res: Response) => {
   try {
-    const all = await  FavauriteMarket.findAll();
+    const all = await  FavauriteMarket.findAll({include:[
+      {
+      model:Market,
+      as:"market"
+     },
+
+      {
+      model:User,
+      as:"buyer"
+     },
+  
+    ]});
     res.status(200).json(all);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching favourites', error });
   }
 };
+
+export const getUserFavourites=async (req: Request, res: Response)=>{
+   try {
+    const buyerId = (req as any).user.id;
+    if(!buyerId){
+      res.status(403).json({})
+    }
+    const all = await  FavauriteMarket.findOne({where:{buyerId},include:[
+      {
+      model:Market,
+      as:"market"
+     },
+
+      {
+      model:User,
+      as:"buyer"
+     },
+  
+    ]});
+    res.status(200).json(all);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching favourites', error });
+  }
+}
 
 export const getFavouriteById = async (req: Request, res: Response) => {
   try {

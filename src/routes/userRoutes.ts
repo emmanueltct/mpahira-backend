@@ -6,10 +6,21 @@ import { isAdmin, isAuthenticated } from '../middleware/isAuthenticated';
 const authRoutes = Router();
 
 authRoutes.post('/signup', registerUser);
+
+// authRoutes.post('/login', passport.authenticate('local', { session: false }), loginUser);
+
+// authRoutes.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+// authRoutes.get('/google/callback', passport.authenticate('google', { session: false }), googleCallback);
+
 authRoutes.post('/login', passport.authenticate('local', { session: false }), loginUser);
 
 authRoutes.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
-authRoutes.get('/google/callback', passport.authenticate('google', { session: false }), googleCallback);
+
+authRoutes.get(
+  '/google/callback',
+  passport.authenticate('google', { session: false, failureRedirect: `${process.env.FRONTEND_URL}/auth/login?error=server_error` }),
+  googleCallback // this function should handle generating JWT / redirecting user
+);
 
 authRoutes.post('/refresh-token', refreshToken);
 

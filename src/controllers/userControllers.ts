@@ -29,7 +29,7 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
     // Hash password
     const validatedData = await registerUserSchema.parseAsync(req.body);
     const hashedPassword = await bcrypt.hash(password, 12);
-    const buyerRole = await Role.findOne({ where: { role: 'buyer' } });
+    const buyerRole = await Role.findOne({ where: { role: 'Buyer' } });
     // Create user
     const newUser = await User.create({
       ...validatedData,
@@ -110,35 +110,39 @@ export const getUserProfile = async (req: Request, res: Response): Promise<void>
   }
 };
 
-// Google OAuth callback handler
+
+
 export const googleCallback = async (req: Request, res: Response): Promise<void> => {
   try {
     const user = req.user as UserAttributes;
-    
+
     if (!user) {
-      res.status(401).json({ message: 'Google authentication failed' });
+      // Google OAuth failed
+      res.redirect(`${process.env.FRONTEND_URL}/auth/login?error=oauth_failed`);
       return;
     }
 
+    // Generate JWT tokens
     const tokens = generateTokens(user.id);
-    
-    // Update user with new tokens
+
+    // Update user with the new tokens
     await User.update(
-      { 
-        accessToken: tokens.accessToken, 
-        refreshToken: tokens.refreshToken 
+      {
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
       },
       { where: { id: user.id } }
     );
 
-     res.redirect(`${process.env.FRONTEND_URL}/auth/google?accessToken=${tokens.accessToken}`);
-   
-    
+    // Redirect to frontend with access token
+    res.redirect(
+      `${process.env.FRONTEND_URL}/auth/google?accessToken=${tokens.accessToken}`
+    );
   } catch (error) {
+    console.error('Google OAuth callback error:', error);
 
-      res.redirect(`${process.env.FRONTEND_URL}/auth/login`);
-    
-    //res.status(500).json({ message: 'Google authentication error', error });
+    // Redirect to login on failure
+    res.redirect(`${process.env.FRONTEND_URL}/auth/login?error=server_error`);
   }
 };
 
@@ -195,7 +199,7 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
 
     const user = await User.findOne({ where: { email } });
     if (!user){
-     res.status(404).json({ msg: 'User not found' });
+     res.status(404).json({ message: 'User not found' });
      return
     } 
 
@@ -205,9 +209,9 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
     await user.update({ otp, otpExpires });
     await sendOTPEmail(email, otp);
 
-    res.json({ msg: 'OTP sent to email' });
+    res.json({ message: 'OTP sent to email' });
   } catch (err) {
-    res.status(400).json({ msg: 'Invalid input', error: err });
+    res.status(400).json({ message: 'Invalid input', error: err });
   }
 };
 
@@ -217,13 +221,13 @@ export const verifyOtp = async (req: Request, res: Response) => {
 
     const user = await User.findOne({ where: { email } });
     if (!user || user.otp !== otp || new Date() > new Date(user.otpExpires as Date)) {
-       res.status(400).json({ msg: 'Invalid or expired OTP' });
+       res.status(400).json({ message: 'Invalid or expired OTP' });
        return
     }
 
-    res.json({ msg: 'OTP verified' });
+    res.json({ message: 'OTP verified' });
   } catch (err) {
-    res.status(400).json({ msg: 'Invalid input', error: err });
+    res.status(400).json({ message: 'Invalid input', error: err });
   }
 };
 
@@ -233,16 +237,16 @@ export const resetPassword = async (req: Request, res: Response) => {
 
     const user = await User.findOne({ where: { email } });
     if (!user || user.otp !== otp || new Date() > new Date(user.otpExpires as Date )) {
-       res.status(400).json({ msg: 'Invalid or expired OTP' });
+       res.status(400).json({ message: 'Invalid or expired OTP' });
        return
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     await user.update({ password: hashedPassword, otp:"", otpExpires:undefined });
 
-    res.json({ msg: 'Password reset successful' });
+    res.json({ message: 'Password reset successful' });
   } catch (err) {
-    res.status(400).json({ msg: 'Invalid input', error: err });
+    res.status(400).json({ message: 'Invalid input', error: err });
   }
 };
 

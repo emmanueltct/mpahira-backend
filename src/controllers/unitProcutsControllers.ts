@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { unitProductAttribute } from '../interfaces/unitProductInterface';
-import UnitProduct from '../models/unitProductModel';
+import { SubUnitProduct, UnitProduct } from '../models/associations';
+
 
 // Create a new Unit product
 export const createProductUnit = async (req: Request<{}, {}, Pick<unitProductAttribute, 'unitProduct'|'unitProductDescription'>>, res: Response): Promise<void> => {
@@ -17,7 +18,14 @@ export const createProductUnit = async (req: Request<{}, {}, Pick<unitProductAtt
 // Get all Unit products
 export const getAllProductUnits = async (_req: Request, res: Response): Promise<void> => {
   try {
-    const unitProducts: unitProductAttribute[] = await UnitProduct.findAll();
+    const unitProducts: unitProductAttribute[] = await UnitProduct.findAll({
+      include: [
+        {
+          model: SubUnitProduct,
+          as: "subUnits", // 👈 make sure alias matches association
+        },
+      ],
+    });
     res.status(200).json(unitProducts);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching unit products', error });
@@ -27,7 +35,16 @@ export const getAllProductUnits = async (_req: Request, res: Response): Promise<
 // Get Unit product by ID
 export const getProductUnitById = async (req: Request<{ id: string }>, res: Response): Promise<void> => {
   try {
-    const unitProduct = await UnitProduct.findByPk(req.params.id);
+    const unitProduct = await UnitProduct.findByPk(req.params.id,{
+      
+      include: [
+        {
+          model: SubUnitProduct,
+          as: "subUnits", // 👈 make sure alias matches association
+        },
+      ],
+    
+    });
     if (!unitProduct) {
       res.status(404).json({ message: 'Unit product not found' });
       return;

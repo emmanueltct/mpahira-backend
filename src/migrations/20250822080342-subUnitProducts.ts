@@ -4,47 +4,29 @@ import { QueryInterface, DataTypes } from 'sequelize';
 
 export default {
   up: async (queryInterface: QueryInterface) => {
-    await queryInterface.createTable('delivery_locations', {
+    await queryInterface.createTable('sub_unit_products', {
        id: {
           type: DataTypes.UUID,
           defaultValue: DataTypes.UUIDV4,
           primaryKey: true,
         },
 
-        buyerId: {
+        unitId: {
           type: DataTypes.UUID,
           allowNull: false,
         },
+       
+        subUnit: {
+           type: DataTypes.STRING,
+           allowNull:false,
+        },
 
-        locationLongitude: {
+        subUnitDescription: {
           type: DataTypes.STRING,
           allowNull: true,
-        },
-
-        locationLatitude: {
-          type: DataTypes.STRING,
-          allowNull: true,
-        },
-
-        googleMapCoordinate: {
-          type: DataTypes.STRING,
-          allowNull: true,
-        },
-
-         StreetNumber: {
-          type: DataTypes.TEXT,
-          allowNull: true,
-        },
-        nearestLandmark: {
-          type: DataTypes.TEXT,
-          allowNull: true,
-        },
-
-        locationDescription: {
-          type: DataTypes.TEXT,
-          allowNull: true,
-        },
-      createdAt: {
+          },
+        
+       createdAt: {
         allowNull: false,
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
@@ -59,6 +41,6 @@ export default {
   },
 
   down: async (queryInterface: QueryInterface) => {
-    await queryInterface.dropTable('delivery_locations');
+    await queryInterface.dropTable('sub_unit_products');
   },
 };
