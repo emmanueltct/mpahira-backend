@@ -5,10 +5,10 @@
   "type": "commonjs",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node --no-warnings dist/app.js",
-    "dev": "nodemon",
-    "migrate": "sequelize-cli db:migrate",
-    "migrate:undo": "sequelize-cli db:migrate:undo",
+    "start": "cross-env NODE_ENV=neon node --no-warnings dist/app.js",
+    "dev": "cross-env NODE_ENV=neon nodemon",
+    "migrate": "cross-env NODE_ENV=neon sequelize-cli db:migrate",
+    "migrate:undo": "cross-env NODE_ENV=neon sequelize-cli db:migrate:undo:all",
     "migration:generate": "npx sequelize-cli migration:generate --migrations-path src/migrations",
     "build": "tsc",
     "lint": "eslint . --ext .ts"
@@ -59,6 +59,7 @@
     "@types/passport-local": "^1.0.38",
     "@types/sequelize": "^4.28.20",
     "@types/uuid": "^10.0.0",
+    "cross-env": "^10.0.0",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"

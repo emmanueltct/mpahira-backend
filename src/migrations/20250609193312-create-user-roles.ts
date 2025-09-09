@@ -1,15 +1,20 @@
 // src/migrations/20250609193312-create-user-roles.ts
-import { QueryInterface, DataTypes } from "sequelize";
+import { QueryInterface, DataTypes, Sequelize } from "sequelize";
 import dotenv from "dotenv";
-import bcrypt from "bcrypt";
 dotenv.config();
+
 export default {
   up: async (queryInterface: QueryInterface) => {
+    // Enable pgcrypto (needed for gen_random_uuid)
+    await queryInterface.sequelize.query(
+      `CREATE EXTENSION IF NOT EXISTS "pgcrypto";`
+    );
+
     // Create table
     await queryInterface.createTable("roles", {
       id: {
         type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
+        defaultValue: Sequelize.literal("gen_random_uuid()"),
         primaryKey: true,
         allowNull: false,
       },
@@ -20,21 +25,22 @@ export default {
       createdAt: {
         allowNull: false,
         type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
       },
       updatedAt: {
         allowNull: false,
         type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
       },
     });
 
-    // Insert one record every time migration runs
-    console.log( process.env.UserRole)
+    // Insert one record with explicit id
+    const roleValue = process.env.UserRole || "Admin";
+
     await queryInterface.bulkInsert("roles", [
       {
-          // generates a new UUID for each run
-        role: process.env.UserRole,    // you can change to e.g. 'seller' or 'admin'
+        id: Sequelize.literal("gen_random_uuid()"), // ✅ force uuid
+        role: roleValue,
         createdAt: new Date(),
         updatedAt: new Date(),
       },

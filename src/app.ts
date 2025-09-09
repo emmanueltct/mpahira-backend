@@ -19,8 +19,9 @@ import './config/passport';
 import favouriteMarketRoutes from './routes/favouriteMarketRoutes';
 import deliveryLocationRoutes from './routes/deliveryLocationRoutes';
 import bodyParser from 'body-parser';
-import crypto from 'crypto';
 import driverRoutes from './routes/driverRoutes';
+import productPricing from "./routes/productPricing";
+import subUnitProductRoutes from './routes/subUnitProductRoutes';
 
 const app: Application = express();
 const PORT = process.env.PORT || 8000;
@@ -64,6 +65,9 @@ app.use('/api/favourite-markets', favouriteMarketRoutes);
 app.use('/api/delivery-locations', deliveryLocationRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/drivers", driverRoutes);
+app.use("/api/sub-units",subUnitProductRoutes);
+
+app.use("/api/product-pricing",productPricing);
 
 
 (async () => {

@@ -3,7 +3,7 @@ import { QueryInterface, DataTypes } from 'sequelize';
 
 export default {
   up: async (queryInterface: QueryInterface) => {
-    await queryInterface.createTable('unitproducts', {
+    await queryInterface.createTable('unit_products', {
       id: {
         type: DataTypes.UUID,
         defaultValue: DataTypes.UUIDV4,
@@ -32,7 +32,7 @@ export default {
   },
 
   down: async (queryInterface: QueryInterface) => {
-    await queryInterface.dropTable('unitproducts');
+    await queryInterface.dropTable('unit_products');
   },
 };
 

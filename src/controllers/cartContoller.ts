@@ -12,6 +12,7 @@ import User from '../models/userModel';
 import Shop from '../models/shopModel';
 import Market from '../models/marketModel';
 import { DeliveryLocation } from '../models/DeliveryLocation';
+import { v4 as uuidv4 } from 'uuid';
 import { isTypedArray } from 'util/types';
 
 
@@ -74,7 +75,7 @@ export const createCart = async (req: Request, res: Response) => {
 
       const newCart = await Cart.create({
         userId,
-        deliverylocationId: lastDeliveryLocation?.id ||"",
+        deliverylocationId: lastDeliveryLocation?.id,
         items: JSON.stringify(newItem),
         totalAmount: newItem.totalPrice,
         serviceCost,

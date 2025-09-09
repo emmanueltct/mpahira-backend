@@ -1,9 +1,10 @@
 import { Request, Response } from 'express';
 import { ShopAttributes } from '../interfaces/shopInterface';
-import Shop from '../models/shopModel';
-import Product from '../models/productModel';
+
 import User from '../models/userModel';
 import Market from '../models/marketModel';
+import ShopProduct from '../models/shopProductModel';
+import { Shop } from '../models/associations';
 
 
 // Create a new Shop
@@ -20,12 +21,26 @@ export const createShop = async (req: Request, res: Response): Promise<void> => 
 };
 
 // Get all Shops
-export const getAllShops = async (_req: Request, res: Response): Promise<void> => {
+export const getAllShops = async (req: Request, res: Response): Promise<void> => {
   try {
-    const Shops: ShopAttributes[] = await Shop.findAll({
+     const user = req.user as { id: number; role: { role: string } } | undefined;
+    let Shops: ShopAttributes[]=[];
+
+    if(user && user.role.role === "Seller"){
+        Shops= await Shop.findAll({where:{sellerId:user.id},
+      include: [{ model: User, as: 'seller' },
+           { model: Market, as: 'market'}, { model: ShopProduct, as: 'product'}, ]
+    });
+    }else if(user && user.role.role === "Admin"){
+      Shops= await Shop.findAll( {
       include: [{ model: User, as: 'seller' },
            { model: Market, as: 'market'}]
+
     });
+    }else{
+      Shops=[];
+    }
+      
     res.status(200).json(Shops);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching Shops', error });
@@ -61,28 +76,22 @@ export const getShopBySeller=async (req: Request, res: Response): Promise<void> 
 // Update an existing Shop by ID
 export const updateShop = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id } = req.params;
-    const { Shop } = req.body;
+    const id = req.params.id;
 
-    const existingShop = await Shop.findByPk(id);
+    // 🔹 Do NOT destructure Shop from req.body (it overwrote your model)
+    const existingShop = await Shop.findOne({ where: { id } });
+
     if (!existingShop) {
-      res.status(404).json({ message: 'Shop not found' });
+      res.status(404).json({ message: "Shop not found" });
       return;
     }
 
-    // Check if the new Shop name already exists (and is not the same as current)
-    // const duplicate = await Shop.findOne({ where: { brand } });
-    // if (duplicate && duplicate.id !== id) {
-    //   res.status(409).json({ message: 'Shop name already in use' });
-    //   return;
-    // }
-
     await existingShop.update(req.body);
-   
 
-    res.status(200).json({ message: 'Shop updated successfully', Shop: existingShop });
+    res.status(200).json({ message: "Shop updated successfully", shop: existingShop });
   } catch (error) {
-    res.status(500).json({ message: 'Failed to update Shop', error });
+    console.error(error);
+    res.status(500).json({ message: "Failed to update Shop", error });
   }
 };
 

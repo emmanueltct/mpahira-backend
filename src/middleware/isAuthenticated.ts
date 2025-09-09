@@ -6,9 +6,9 @@ import { UserAttributes } from '../interfaces/userInterface';
 
 export const isAuthenticated = async (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
-
+  console.log("-----------------------------------------",authHeader)
   if (!authHeader){
-    res.status(401).json({ msg: 'Token missing' });
+    res.status(401).json({ message: 'Unauthorized access. Please log in first.' });
      return
   } 
 
@@ -23,7 +23,7 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
     next();
   } catch {
     res.status(403).json({ status:403,
-      msg: 'Invalid token' });
+      message: 'Invalid token please login first '});
   }
 };
 
@@ -58,7 +58,7 @@ export const optionalAuth = async(req: Request, res: Response, next: NextFunctio
 export const isAdmin = (req: Request, res: Response, next: NextFunction) => {
   const user = (req as any).user;
 
-  
+  console.log("}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}",user)
      if (user.role.role == 'Admin') {
       
      next();

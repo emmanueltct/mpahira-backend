@@ -9,12 +9,12 @@ import {
   
 } from "../controllers/shopControllers"
 
-import { isAdmin, isAuthenticated, isSeller } from '../middleware/isAuthenticated';
+import { isAdmin, isAuthenticated, isSeller, optionalAuth } from '../middleware/isAuthenticated';
 
 const shopRouter = Router();
 
 shopRouter.post('/',isAuthenticated, isSeller, createShop);
-shopRouter.get('/', getAllShops);
+shopRouter.get('/',optionalAuth , getAllShops);
 shopRouter.get('/:id', getShopById);
 shopRouter.get('/sellers/:id', getShopBySeller);
 shopRouter.patch('/:id', updateShop);

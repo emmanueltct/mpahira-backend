@@ -27,8 +27,8 @@ export default {
         },
 
         items: {
-        type: DataTypes.TEXT('long'),    // use TEXT/LONGTEXT instead of JSON
-        allowNull: false,
+        type: DataTypes.TEXT,    // use TEXT/LONGTEXT instead of JSON
+      
         get() {
           const raw = this.getDataValue('items');
           return raw ? JSON.parse(raw) : [];    // return parsed object/array
@@ -91,13 +91,13 @@ export default {
         },
 
         agentComment: {
-          type: DataTypes.TEXT,
-          allowNull: true,
+          type: DataTypes.TEXT
+         
         },
 
         buyerComment: {
-          type: DataTypes.TEXT,
-          allowNull: true,
+          type: DataTypes.TEXT
+          
         },
 
         serviceRating: {
