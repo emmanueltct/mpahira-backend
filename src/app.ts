@@ -29,7 +29,7 @@ const PORT = process.env.PORT || 8000;
 
 // ✅ CORS must be first middleware
 app.use(cors({
-  origin: ["http://localhost:3000", "https://mpahira.vercel.app"],
+  origin: ["http://localhost:3000", "https://mpahira.vercel.app","https://mpahira.netlify.app/"],
   credentials: true,
 }));
 
