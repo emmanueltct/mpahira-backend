@@ -282,6 +282,7 @@ const updatePaymentStatus = async (orderId: string, status:"pending" | "Success"
 
 const assignAgent = async (orderId: string, agentId: string) => {
   const order = await Order.findByPk(orderId);
+  console.log("0000000000000000000000000000000000000000000",agentId)
   if (!order) throw new Error('Order not found');
   order.agentId = agentId;
   order.orderProcessingStatus = 'Assigned to Agent';

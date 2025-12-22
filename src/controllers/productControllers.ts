@@ -2,6 +2,10 @@ import { Request, Response } from 'express';
 import { productAttribute } from "../interfaces/productInterface";
 import Product from '../models/productModel';
 
+import ProductSubCategory from '../models/ProductSubCategory';
+import { Market, ProductPricing, Shop, ShopProduct, SubUnitProduct, UnitProduct, User } from '../models/associations';
+
+
 // Create a new product
 export const createProduct = async (req: Request<{}, {}, Pick<productAttribute, 'product'|'productKinyLabel'>>, res: Response): Promise<void> => {
   try {
@@ -17,6 +21,36 @@ export const createProduct = async (req: Request<{}, {}, Pick<productAttribute, 
 export const getAllProducts = async (_req: Request, res: Response): Promise<void> => {
   try {
     const products: productAttribute[] = await Product.findAll({
+          include:[{model:ProductSubCategory, as:"productSubCategory",
+            include: [
+            {
+              model:ShopProduct,
+              as:"shopProduct",
+              include:[
+                {
+              model: Shop,
+              as: "shopName",
+              include: [
+                    {
+                      model: Market,
+                      as: "market",
+                      attributes: [
+                        "id","marketName"
+                      ],
+                    },
+                  ],
+            },
+            {
+              model: ProductPricing,
+              as: "productUnities",
+              include: [
+                { model: UnitProduct, as: "unit" },
+                { model: SubUnitProduct, as: "subUnit" },
+              ],
+            }],
+
+              }],
+              }],
           order: [['createdAt', 'DESC']], // or any column you want to sort by
         });
     res.status(200).json(products);

@@ -62,7 +62,7 @@ DeliveryLocation.init(
   {
     sequelize,
     modelName: 'DeliveryLocation',
-    tableName: 'deliverylocations',
+    tableName: 'delivery_locations',
     timestamps: true,
   }
 );

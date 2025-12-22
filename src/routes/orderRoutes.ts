@@ -11,10 +11,11 @@ orderRouter.post('/', isAuthenticated, orderController.createOrderFromCart);
 orderRouter.get('/',isAuthenticated, orderController.getClientOrders);
 orderRouter.get("/:id",isAuthenticated, orderController.getSingleClientOrders)
 orderRouter.patch('/:orderId/payment-status',  isAuthenticated, isAdmin, zodValidate(paymentStatusSchema), orderController.updatePaymentStatus);
-orderRouter.patch('/:orderId/assign-agent', authenticateUser, isAdmin, zodValidate(assignAgentSchema), orderController.assignAgent);
-orderRouter.patch('/:orderId/assign-driver', authenticateUser, isAgent, zodValidate(assignDriverSchema), orderController.assignDriver);
-orderRouter.patch('/:orderId/status', authenticateUser, isAgent, zodValidate(orderStatusSchema), orderController.updateOrderStatus);
+orderRouter.patch('/:orderId/assign-agent', isAuthenticated,isAdmin, zodValidate(assignAgentSchema), orderController.assignAgent);
+orderRouter.patch('/:orderId/assign-driver', isAuthenticated, isAgent, zodValidate(assignDriverSchema), orderController.assignDriver);
+orderRouter.patch('/:orderId/status', isAuthenticated, isAgent, zodValidate(orderStatusSchema), orderController.updateOrderStatus);
 orderRouter.patch('/:orderId/item/:productId',isAuthenticated, isBuyer, zodValidate(orderItemUpdateSchema), orderController.updateOrderItemStatus);
+
 export default orderRouter;
 
 

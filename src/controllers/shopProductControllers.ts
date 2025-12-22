@@ -26,8 +26,8 @@ export const createShopProduct = async (req: Request, res: Response) => {
     const result = await uploadToCloudinary(req.file.buffer, req.file.originalname,folderName);
     
     const {
-       shopId,productUnit, productPrice,productName, productId,isExpires,expireDate,isAvailable,productDescription,
-     kinyLabel,productDiscount
+       shopId,productName,productId,isExpires,expireDate,isAvailable,productDescription,
+     kinyLabel,subCategoryId
     } = req.body;
 
 
@@ -51,12 +51,10 @@ if(result.secure_url){
 const shopProduct = await ShopProduct.create({
      shopId,
      productId:finalProductId,
-     productUnit,
+    //  productUnit,
      engLabel:productName,
+     subCategoryId,
      kinyLabel,
-     marketUnitPrice:productPrice,
-     productDiscount,
-     systemUnitPrice:productPrice+(productPrice*10/100),
      isExpires,
      expireDate,
      isAvailable,

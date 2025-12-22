@@ -63,7 +63,7 @@ ProductPricing.init(
   {
     sequelize,
     modelName: "ProductPricing",
-    tableName: "product_units",
+    tableName: "product_prices",
     timestamps: true,
   }
 );

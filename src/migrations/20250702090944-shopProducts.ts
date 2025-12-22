@@ -21,21 +21,31 @@ export default {
       onUpdate: 'CASCADE',
       onDelete: 'RESTRICT',
     },
-    productUnit: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: 'unit_products',
-        key: 'id',
-      },
-      onUpdate: 'CASCADE',
-      onDelete: 'RESTRICT',
-    },
+    // productUnit: {
+    //   type: DataTypes.UUID,
+    //   allowNull: false,
+    //   references: {
+    //     model: 'unit_products',
+    //     key: 'id',
+    //   },
+    //   onUpdate: 'CASCADE',
+    //   onDelete: 'RESTRICT',
+    // },
     productId: {
       type: DataTypes.UUID,
       allowNull: false,
       references: {
         model: 'products',
+        key: 'id',
+      },
+      onUpdate: 'CASCADE',
+      onDelete: 'RESTRICT',
+    },
+     subCategoryId: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: {
+        model: 'product_sub_categories',
         key: 'id',
       },
       onUpdate: 'CASCADE',
@@ -51,19 +61,7 @@ export default {
       allowNull:false,
       defaultValue:""
     },
-     marketUnitPrice:{
-      type: DataTypes.STRING,
-      allowNull:false,
-    },
-    systemUnitPrice:{
-      type: DataTypes.STRING,
-      allowNull:false,
-    },
-     productDiscount:{
-      type: DataTypes.STRING,
-      allowNull:false,
-      defaultValue:0
-    },
+    
     isExpires:{
       type: DataTypes.BOOLEAN,
       allowNull: false,

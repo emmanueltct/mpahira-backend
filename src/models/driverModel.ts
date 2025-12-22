@@ -52,7 +52,7 @@ Driver.init(
   {
     sequelize,
     modelName: "Driver",
-    tableName: "Drivers",
+    tableName: "drivers",
   }
 );
 
