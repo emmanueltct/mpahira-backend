@@ -31,7 +31,7 @@ export default {
           allowNull: true,
         },
 
-         StreetNumber: {
+         streetNumber: {
           type: DataTypes.TEXT,
           allowNull: true,
         },

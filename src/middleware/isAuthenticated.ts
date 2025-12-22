@@ -18,7 +18,7 @@ export const isAuthenticated = async (req: Request, res: Response, next: NextFun
     const loggedUser=await User.findByPk(decoded.id, {
       include: [{ model: Role, as: 'role' }]
     });
-
+      console.log("8888888888888888888888888888888888888",loggedUser)
     req.user = loggedUser as UserAttributes;
     next();
   } catch {
@@ -58,7 +58,7 @@ export const optionalAuth = async(req: Request, res: Response, next: NextFunctio
 export const isAdmin = (req: Request, res: Response, next: NextFunction) => {
   const user = (req as any).user;
 
-  console.log("}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}",user)
+  console.log("}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}",req.user)
      if (user.role.role == 'Admin') {
       
      next();

@@ -16,12 +16,10 @@ class ShopProduct extends Model<ShopProductAttributes, ShopProductCreationAttrib
   public id!: string;
   public shopId!: string;
   public productId!: string;
-  public marketUnitPrice!:string;
-  public systemUnitPrice!:string;
-  public productUnit!:string;
+  // public productUnit!:string;
+  public subCategoryId!:string;
   public engLabel!:string;
   public kinyLabel!:string;
-  public productDiscount!:string;
   public isExpires!:boolean;
   public expireDate!: string;
   public isAvailable!:boolean;
@@ -50,23 +48,31 @@ ShopProduct.init(
       onDelete: 'RESTRICT',
     },
 
-    productUnit: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: 'unit_products',
-        key: 'id',
-      },
-      onUpdate: 'CASCADE',
-      onDelete: 'RESTRICT',
-    },
-
-
+    // productUnit: {
+    //   type: DataTypes.UUID,
+    //   allowNull: false,
+    //   references: {
+    //     model: 'unit_products',
+    //     key: 'id',
+    //   },
+    //   onUpdate: 'CASCADE',
+    //   onDelete: 'RESTRICT',
+    // },
     productId: {
       type: DataTypes.UUID,
       allowNull: false,
       references: {
         model: 'products',
+        key: 'id',
+      },
+      onUpdate: 'CASCADE',
+      onDelete: 'RESTRICT',
+    },
+    subCategoryId: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: {
+        model: 'product_sub_categories',
         key: 'id',
       },
       onUpdate: 'CASCADE',
@@ -82,21 +88,7 @@ ShopProduct.init(
       allowNull:false,
       defaultValue:""
     },
-     marketUnitPrice:{
-      type: DataTypes.STRING,
-      allowNull:false,
-      defaultValue:0
-    },
-    systemUnitPrice:{
-      type: DataTypes.STRING,
-      allowNull:false,
-      defaultValue:0
-    },
-     productDiscount:{
-      type: DataTypes.STRING,
-      allowNull:false,
-      defaultValue:0
-    },
+    
     isExpires:{
       type: DataTypes.BOOLEAN,
       allowNull: false,
@@ -124,7 +116,7 @@ ShopProduct.init(
   {
     sequelize,
      modelName: 'shopProduct',
-     tableName: 'shopproducts',
+     tableName: 'shop_products',
 
     
   }

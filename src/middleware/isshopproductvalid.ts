@@ -15,12 +15,12 @@ export const validateShopProductInput = async (req: Request, res: Response, next
     return;
   }
 
-  const { productId,shopId} = parsed.data;
+  const { productName,shopId} = parsed.data;
   const user = (req as any).user;
   try {
 
-    if(productId !=null){
-            const existingProduct = await ShopProduct.findOne({ where: { productId, shopId } });
+    if(productName !=null){
+            const existingProduct = await ShopProduct.findOne({ where: {engLabel:productName, shopId } });
             if (existingProduct) {
             res.status(409).json({ message: 'Product already exists in thus shop' });
             return;

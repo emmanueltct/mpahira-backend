@@ -6,6 +6,7 @@ import cors from 'cors';
 import rolesRoutes from './routes/roles/rolesRouter';
 import productUnitRoutes from './routes/product-unit/unitProductsRouter';
 import authRoutes from "./routes/userRoutes"
+import agentRoutes from "./routes/agentRoutes"
 import marketRouter from './routes/marketRoutes';
 import shopRouter from './routes/shopRoutes';
 import productsRoutes from './routes/productRoutes';
@@ -13,7 +14,7 @@ import shopProductRouter from './routes/shopProductRoutes';
 import cartRoutes from './routes/cartRoutes';
 import orderRouter from './routes/orderRoutes';
 import paymentRoutes from "./routes/paymentRoutes";
-
+import subCategoryRoutes from "./routes/productSubCategoryRoutes";
 import sequelize from './config/database';
 import './config/passport';
 import favouriteMarketRoutes from './routes/favouriteMarketRoutes';
@@ -55,6 +56,7 @@ app.get("/", (req, res) => {
 app.use('/api/roles', rolesRoutes);
 app.use('/api/product-units', productUnitRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/agents', agentRoutes);
 app.use('/api/market',marketRouter)
 app.use('/api/shop',shopRouter)
 app.use('/api/products',productsRoutes)
@@ -68,7 +70,7 @@ app.use("/api/drivers", driverRoutes);
 app.use("/api/sub-units",subUnitProductRoutes);
 
 app.use("/api/product-pricing",productPricing);
-
+app.use("/api/product-subcategories", subCategoryRoutes);
 
 (async () => {
   try {

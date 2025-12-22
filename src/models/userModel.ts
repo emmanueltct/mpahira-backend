@@ -4,6 +4,7 @@ import { DataTypes, Model, Optional } from 'sequelize';
 import sequelize from '../config/database'; // adjust to your setup
 import { UserAttributes } from '../interfaces/userInterface';
 import Role from './roleModel';
+import { AgentMarket } from './AgentMarket';
 
 
 type UserCreationAttributes = Optional<UserAttributes, 'id' | 'password' | 'profilePic' | 'otp' | 'otpExpires' | 'accessToken' | 'refreshToken' | 'createdAt' | 'updatedAt'>;
@@ -105,5 +106,7 @@ User.belongsTo(Role, {
   foreignKey: 'roleId',
   as: 'role',
 });
+
+
 
 export default User;

@@ -34,7 +34,7 @@ FavauriteMarket.init(
   {
     sequelize,
     modelName: 'FavauriteMarket',
-    tableName: 'favauritemarkets',
+    tableName: 'favaurite_markets',
   }
 );
 

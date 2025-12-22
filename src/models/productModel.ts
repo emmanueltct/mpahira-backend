@@ -1,6 +1,8 @@
 import { DataTypes,Model,Optional } from "sequelize";
 import sequelize from '../config/database';
 import { productAttribute } from "../interfaces/productInterface";
+import ShopProduct from "./shopProductModel";
+import ProductSubCategory from "./ProductSubCategory";
 
 
 
@@ -37,4 +39,6 @@ Product.init(
   }
 );
 
+Product.hasMany(ProductSubCategory,{foreignKey:"categoryId", as:"productSubCategory"})
+Product.hasMany(ShopProduct,{foreignKey:"productId", as:"shopProduct"})
 export default Product;
