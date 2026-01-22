@@ -5,6 +5,7 @@ import {
   getSubCategoryById,
   updateSubCategory,
   deleteSubCategory,
+  getSubCategoryShopProduct,
 } from "../controllers/productSubCategoryController";
 
 import {
@@ -23,6 +24,7 @@ const router = Router();
 router.post("/",isAuthenticated, isAdmin,upload.single('image'), validate(createSubCategorySchema), createSubCategory);
 router.get("/", getAllSubCategories);
 router.get("/:id", validate(getSubCategoryByIdSchema), getSubCategoryById);
+router.get("/shopProduct/:subCategoryId",getSubCategoryShopProduct);
 router.patch("/:id",isAuthenticated, isAdmin,upload.single('image'), validate(updateSubCategorySchema), updateSubCategory);
 router.delete("/:id", validate(deleteSubCategorySchema), deleteSubCategory);
 

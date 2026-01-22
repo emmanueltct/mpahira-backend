@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import  ProductSubCategory  from "../models/ProductSubCategory";
 import { uploadToCloudinary } from "../utils/uploadImage";
+import ShopProduct from "../models/shopProductModel";
 
 // ➤ Create subcategory
 export const createSubCategory = async (req: Request, res: Response) => {
@@ -59,6 +60,24 @@ export const getSubCategoryById = async (req: Request, res: Response) => {
      res.status(500).json({ message: "Error fetching subcategory", error: error.message });
   }
 };
+
+
+export const getSubCategoryShopProduct = async (req: Request, res: Response) => {
+  try {
+    const { subCategoryId } = req.params;
+    const subCategory = await ShopProduct.findAll({where:{subCategoryId:subCategoryId}});
+
+    if (!subCategory) {
+     res.status(404).json({ message: "Subcategory not found" });
+       return
+    }
+
+    res.status(200).json(subCategory);
+  } catch (error: any) {
+     res.status(500).json({ message: "Error fetching subcategory", error: error.message });
+  }
+};
+
 
 // ➤ Update subcategory
 export const updateSubCategory = async (req: Request, res: Response) => {

@@ -23,6 +23,8 @@ import bodyParser from 'body-parser';
 import driverRoutes from './routes/driverRoutes';
 import productPricing from "./routes/productPricing";
 import subUnitProductRoutes from './routes/subUnitProductRoutes';
+import reviewRoutes from "./routes/reviewRoutes";
+import recommendProductRoutes from './routes/recommendProductRoutes';
 
 const app: Application = express();
 const PORT = process.env.PORT || 8000;
@@ -71,6 +73,8 @@ app.use("/api/sub-units",subUnitProductRoutes);
 
 app.use("/api/product-pricing",productPricing);
 app.use("/api/product-subcategories", subCategoryRoutes);
+app.use("/api/product-reviews", reviewRoutes);
+app.use("/api/recommend-products", recommendProductRoutes);
 
 (async () => {
   try {

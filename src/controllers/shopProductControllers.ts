@@ -7,9 +7,11 @@ import { Request, Response } from 'express';
 import Shop from '../models/shopModel';
 import { uploadToCloudinary } from '../utils/uploadImage';
 import { Op } from 'sequelize';
-import { Product, ProductPricing, ShopProduct, SubUnitProduct, UnitProduct } from '../models/associations';
+import { Product, ProductPricing, ShopProduct, SubUnitProduct, UnitProduct,ProductSubCategory, Review, RecommendProduct } from '../models/associations';
 import User from '../models/userModel';
 import Market from '../models/marketModel';
+import { getStringQuery } from '../utils/searchUtil';
+//import ProductSubCategory from '../models/ProductSubCategory';
 // import UnitProduct from '../models/unitProductModel';
 
 
@@ -137,15 +139,24 @@ export const getShopProducts = async (req: Request, res: Response) => {
 
     // Multi-field search for ShopProduct & Product
     const productWhere: any = {};
-      if (category !== "all" && category !== "") {
-        productWhere.id = category;
-      }
+      
       if (searchTerm.trim()) {
         productWhere[Op.or] = [
           { product: { [Op.iLike]: `%${searchTerm}%` } },
           { productKinyLabel: { [Op.iLike]: `%${searchTerm}%` } },
         ];
       }
+
+      const SubProductWhere: any = {};
+      if (category !== "all" && category !== "") {
+        SubProductWhere.id = category;
+      }
+      // if (searchTerm.trim()) {
+      //   SubProductWhere[Op.or] = [
+      //     { subCategoryEng: { [Op.iLike]: `%${searchTerm}%` } },
+      //     { subCategoryKiny: { [Op.iLike]: `%${searchTerm}%` } },
+      //   ];
+      // }
 
     // Market filter inside Shop include
     const marketWhere = market !== "all" && market !== "" ? { id: market } : undefined;
@@ -158,6 +169,16 @@ export const getShopProducts = async (req: Request, res: Response) => {
           as: "productName",
           where: Object.keys(productWhere).length ? productWhere : undefined,
           attributes: ["id", "product", "productKinyLabel"],
+        },
+        {
+          model: Product,
+          as: "productName",
+        },
+        {
+          model: ProductSubCategory,
+          as: "subProductCategory",
+          where: Object.keys(SubProductWhere).length ? SubProductWhere : undefined,
+          attributes: ["id", "subCategoryKiny", "subCategoryEng"],
         },
         {
           model: Shop,
@@ -216,29 +237,47 @@ export const getShopProducts = async (req: Request, res: Response) => {
 
 
 
-export const getShopProductById = async (req: Request, res: Response):Promise<void> => {
+export const getShopProductById = async (req: Request, res: Response): Promise<void> => {
   try {
-    const shopProduct = await ShopProduct.findByPk(req.params.id,{include:[
-      
-       {
-          model:ProductPricing,
+    const shopProduct = await ShopProduct.findOne({
+      where: {
+        id: req.params.id,
+        isAvailable: true, // Only available products
+      },
+      include: [
+        {
+          model: ProductPricing,
           as: "productUnities",
-          include:[
+          required: true, // Only include if ProductPricing exists
+          include: [
             {
-              model:UnitProduct,
+              model: UnitProduct,
               as: "unit",
             },
-             {
-              model:SubUnitProduct,
+            {
+              model: SubUnitProduct,
               as: "subUnit",
+              required: true, // Only include if SubUnitProduct exists
             },
-
           ],
-           // 👈 make sure alias matches associationinclude
         },
-      
-      
-       {
+        {
+          model: Review,
+          as: "productReview",
+           where: {
+            isApproved: true,  // only approved review message
+            },
+          required: false, // Keep product even if no approved reviews
+        },
+
+        {
+          model: RecommendProduct,
+          as: "recommendedProducts",
+          include:[
+             { model: ShopProduct, as: "recommendedProduct" }
+          ]
+        },
+        {
           model: Product,
           as: "productName",
         },
@@ -269,15 +308,18 @@ export const getShopProductById = async (req: Request, res: Response):Promise<vo
             },
           ],
         },
-    ]});
-    if (!shopProduct){
-        res.status(404).json({ message: 'ShopProduct not found' });
-        return
-    } 
+      ],
+    });
+
+    if (!shopProduct) {
+      res.status(200).json({ message: "ShopProduct not found or not available" });
+      return;
+    }
 
     res.status(200).json(shopProduct);
   } catch (error) {
-    res.status(500).json({ message: 'Failed to fetch ShopProduct', error });
+    console.error(error);
+    res.status(500).json({ message: "Failed to fetch ShopProduct", error });
   }
 };
 
@@ -334,3 +376,94 @@ export const deleteShopProduct = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Failed to delete ShopProduct', error });
   }
 };
+
+
+export const getShopProductByHomeSearch=async(req:Request,res:Response)=>{
+
+   try {
+    // 🔹 get search query safely
+  
+    const search = getStringQuery(req.query.products);
+     
+    if (!search) {
+       res.status(400).json({
+        success: false,
+        message: "Search query is required",
+      });
+      return;
+    }
+
+    // 🔹 search only in shopProduct fields
+      const { rows: shopProducts, count } =
+      await ShopProduct.findAndCountAll({
+        where: {
+          [Op.or]: [
+            { engLabel: { [Op.iLike]: `%${search}%` } },
+            { kinyLabel: { [Op.iLike]: `%${search}%` } },
+          ],
+        },
+
+        order: [["createdAt", "DESC"]],
+
+        include: [
+           {
+          model:ProductPricing,
+          as: "productUnities",
+          include:[
+            {
+              model:UnitProduct,
+              as: "unit",
+            },
+             {
+              model:SubUnitProduct,
+              as: "subUnit",
+            },
+
+          ],
+        },
+          {
+            model: Shop,
+            as: "shopName",
+            include: [
+              {
+                model: User,
+                as: "seller",
+                attributes: [
+                  "id",
+                  "firstName",
+                  "lastName",
+                  "telephone",
+                  "email",
+                  "profilePic",
+                ],
+              },
+              {
+                model: Market,
+                as: "market",
+                attributes: [
+                  "id",
+                  "marketName",
+                  "province",
+                  "district",
+                ],
+              },
+            ],
+          },
+        ],
+      });
+
+    res.status(200).json({
+      success: true,
+      count,
+      shopProducts,
+    });
+
+  } catch (error) {
+    console.error("Shop product search error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+
+  }
+}

@@ -8,6 +8,7 @@ import Product from './productModel';
 import Shop from './shopModel';
 import UnitProduct from './unitProductModel';
 import ProductPricing from './productPricing';
+import Review from './reviewModel';
 
 
 type ShopProductCreationAttributes = Optional<ShopProductAttributes, 'id' | 'createdAt' | 'updatedAt'>;
@@ -122,6 +123,6 @@ ShopProduct.init(
   }
 );
 
-
+// ShopProduct.hasMany(Review,{  foreignKey: 'productId',  as: 'productReview'})
 
 export default ShopProduct;
