@@ -6,6 +6,7 @@ import {
   getShopProductById,
   updateShopProduct,
   deleteShopProduct,
+  getShopProductByHomeSearch
 } from "../controllers/shopProductControllers"
 
 import { isAdmin, isAuthenticated, isSeller, optionalAuth } from '../middleware/isAuthenticated';
@@ -18,5 +19,5 @@ shopProductRouter.get('/',optionalAuth , getShopProducts);
 shopProductRouter.get('/:id', getShopProductById);
 shopProductRouter.patch('/:id',upload.single('productProfile'), updateShopProduct);
 shopProductRouter.delete('/:id', deleteShopProduct);
-
+shopProductRouter.get('/products/search',getShopProductByHomeSearch);
 export default shopProductRouter;
